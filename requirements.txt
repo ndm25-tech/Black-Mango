@@ -1,0 +1,4 @@
+# Bewertungs-Antwort-Agent — Abhängigkeiten (Woche 1)
+langchain>=0.3
+langchain-google-genai>=2.0
+python-dotenv>=1.0
