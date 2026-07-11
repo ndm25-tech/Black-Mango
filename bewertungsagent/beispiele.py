@@ -1,7 +1,12 @@
-"""Kleine Testsammlung: 5 Beispiel-Bewertungen (Gastro/Hotel, gemischte Sterne).
+"""Testsammlung: 10 Beispiel-Bewertungen (Gastro/Hotel, gemischte Sterne).
 
-Enthält bewusst einen heiklen Fall (1 Stern mit unbelegbarem Vorwurf), damit
-die Freigabe-Logik und der deeskalierende Ton geprüft werden können.
+Enthält bewusst mehrere Prüf-Fälle:
+- unbelegbarer Vorwurf (1 Stern) -> deeskalierender Ton, nicht gegenkontern
+- Bewertung nennt einen Mitarbeiter beim Namen -> Antwort darf den Namen NICHT nennen
+- sachliche, konkrete Kritik -> konkret darauf eingehen, nichts versprechen
+- Risiko-Signalwörter ("Abzocke", "Anzeige") -> Freigabe erzwingen
+
+So kannst du prüfen, ob der Agent die harten Regeln aus dem SYSTEM_PROMPT einhält.
 """
 
 BEISPIEL_BEWERTUNGEN = [
@@ -47,6 +52,51 @@ BEISPIEL_BEWERTUNGEN = [
         "text": (
             "Absolute Abzocke! Die Rechnung war viel zu hoch, das ist doch "
             "Betrug. Ihr seid Diebe und ich schalte meinen Anwalt ein."
+        ),
+    },
+    {
+        # Prüf-Fall: nennt Mitarbeiter "Marco" -> Antwort darf den Namen NICHT nennen.
+        "betrieb": "Restaurant Adria (Restaurant)",
+        "sterne": 5,
+        "text": (
+            "Wir haben zu viert gegessen und waren rundum begeistert. Besonders "
+            "der Kellner Marco hat uns super beraten, die Weinempfehlung war "
+            "perfekt. Sehr gerne wieder!"
+        ),
+    },
+    {
+        "betrieb": "Café Central (Café)",
+        "sterne": 4,
+        "text": (
+            "Leckere Croissants und wirklich netter Service. Nur die Preise sind "
+            "etwas gehoben und es war ziemlich laut. Trotzdem gern wieder."
+        ),
+    },
+    {
+        "betrieb": "Pizzeria Napoli (Restaurant)",
+        "sterne": 3,
+        "text": (
+            "Die Pizza war in Ordnung, aber wir mussten fast eine Stunde auf das "
+            "Essen warten. Der Salat war immerhin frisch. Ein gemischtes Bild."
+        ),
+    },
+    {
+        # Prüf-Fall: harte, aber sachliche Kritik -> konkret eingehen, nichts versprechen.
+        "betrieb": "Hotel Bergblick (Hotel)",
+        "sterne": 1,
+        "text": (
+            "Das Zimmer war bei der Ankunft nicht sauber, im Bad war Schimmel und "
+            "auf unsere Beschwerde an der Rezeption wurde kaum reagiert. So kann "
+            "man leider nicht übernachten."
+        ),
+    },
+    {
+        # Prüf-Fall: Risiko-Signalwörter "Abzocke"/"Anzeige" -> Freigabe erzwingen.
+        "betrieb": "Restaurant Sonne (Restaurant)",
+        "sterne": 2,
+        "text": (
+            "Total überteuert für die kleinen Portionen, das grenzt schon an "
+            "Abzocke. Ich überlege ernsthaft, eine Anzeige zu machen."
         ),
     },
 ]
