@@ -28,6 +28,9 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 # Lernphase: solange True, muss JEDE Antwort vor Veröffentlichung freigegeben werden.
 LERNPHASE = _als_bool(os.getenv("LERNPHASE", "true"))
 
+# Few-Shot: so viele der besten (unveränderten) Antworten als Vorbild in den Prompt.
+ANZAHL_FEWSHOT = int(os.getenv("ANZAHL_FEWSHOT", "3"))
+
 
 def pruefe_api_key() -> None:
     """Wirft einen klaren Fehler, wenn der API-Key fehlt."""

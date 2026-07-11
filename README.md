@@ -62,8 +62,10 @@ nicht gegenkontern, keine Mitarbeiternamen, 2–4 Sätze. Zusätzlich erzwingt
 ## 🗺️ Roadmap
 
 - **Woche 1:** Projektstruktur, modularer Agent, Testsammlung, Demo. ✅
-- **Woche 2 (jetzt):** Lern-Protokoll (Original + Entwurf + finale Antwort +
+- **Woche 2:** Lern-Protokoll (Original + Entwurf + finale Antwort +
   „geändert?") in CSV speichern (`protokoll.py` + `freigabe.py`). ✅
-- **Woche 3:** Few-Shot – beste gespeicherte Antworten automatisch in den Prompt
-  laden; einfache Streamlit-Oberfläche mit Freigabe-Button.
-- **Woche 4:** Mit echtem Testbetrieb nutzen, Ton feinjustieren, stabilisieren.
+- **Woche 3 (jetzt):** Few-Shot – die besten (unveränderten) gespeicherten
+  Antworten werden automatisch als Vorbild in den Prompt geladen
+  (`agent.baue_nachrichten`). Damit „lernt" der Agent deinen Stil. ✅
+- **Woche 4:** Einfache Oberfläche (Streamlit) mit Freigabe-Button; mit echtem
+  Testbetrieb nutzen, Ton feinjustieren, stabilisieren.

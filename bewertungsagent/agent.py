@@ -8,7 +8,7 @@ Der LLM-Import passiert bewusst erst beim ersten echten Aufruf (lazy),
 damit sich das Modul ohne installiertes langchain importieren lässt.
 """
 
-from . import config
+from . import config, protokoll
 
 SYSTEM_PROMPT = """
 Du schreibst für einen Gastronomie- oder Hotelbetrieb in Deutschland Antworten
@@ -68,22 +68,51 @@ def braucht_freigabe(review_text: str, sterne: int) -> bool:
     return bool(gefundene_risikowoerter(review_text))
 
 
-def antwort_erzeugen(betrieb: str, review_text: str, sterne: int) -> dict:
-    """Erzeugt einen Antwort-Entwurf und den Freigabe-Status für eine Bewertung."""
-    user_message = (
+def _baue_user_nachricht(betrieb: str, review_text: str, sterne) -> str:
+    return (
         f"Betrieb: {betrieb}\n"
         f"Sterne: {sterne} von 5\n"
         f'Bewertungstext: "{review_text}"\n\n'
         "Schreibe die Antwort."
     )
-    antwort = _get_llm().invoke(
-        [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_message},
-        ]
-    )
+
+
+def baue_nachrichten(betrieb: str, review_text: str, sterne: int) -> list[dict]:
+    """Baut die Nachrichten für Gemini — inklusive Few-Shot aus dem Gedächtnis.
+
+    Few-Shot = "die KI lernt deinen Stil": frühere, von dir freigegebene und
+    NICHT geänderte Antworten werden als Vorbild mitgeschickt. Das Modell selbst
+    ändert sich nicht — es sieht nur gute Beispiele und ahmt den Ton nach.
+    """
+    nachrichten = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+    # Gedächtnis: die besten bisherigen Antworten als Vorbild (Bewertung -> Antwort).
+    for bsp in protokoll.beste_beispiele(n=config.ANZAHL_FEWSHOT):
+        nachrichten.append({
+            "role": "user",
+            "content": _baue_user_nachricht(
+                bsp.get("betrieb", ""), bsp.get("original", ""), bsp.get("sterne", ""),
+            ),
+        })
+        nachrichten.append({"role": "assistant", "content": bsp.get("finale_antwort", "")})
+
+    # Zum Schluss die aktuelle Bewertung, die beantwortet werden soll.
+    nachrichten.append({
+        "role": "user",
+        "content": _baue_user_nachricht(betrieb, review_text, sterne),
+    })
+    return nachrichten
+
+
+def antwort_erzeugen(betrieb: str, review_text: str, sterne: int) -> dict:
+    """Erzeugt einen Antwort-Entwurf (mit Few-Shot) und den Freigabe-Status."""
+    nachrichten = baue_nachrichten(betrieb, review_text, sterne)
+    # Anzahl Few-Shot-Beispiele = alle Paare außer system + aktueller Bewertung.
+    fewshot_anzahl = (len(nachrichten) - 2) // 2
+    antwort = _get_llm().invoke(nachrichten)
     return {
         "entwurf": antwort.content.strip(),
         "freigabe_noetig": braucht_freigabe(review_text, sterne),
         "risikowoerter": gefundene_risikowoerter(review_text),
+        "fewshot_verwendet": fewshot_anzahl,
     }
