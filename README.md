@@ -26,9 +26,13 @@ pip install -r requirements.txt
 cp .env.example .env
 #    -> GOOGLE_API_KEY in .env eintragen
 
-# 3. Demo starten
+# 3. Demo starten (nur Entwürfe ansehen)
 python demo.py            # echte Entwürfe via Gemini
 python demo.py --offline  # Trockenlauf ohne API-Key (nur Freigabe-Logik)
+
+# 4. Freigabe + Gedächtnis (Woche 2): Entwurf prüfen und speichern
+python freigabe.py            # echte Entwürfe, ENTER=übernehmen / Text=korrigieren
+python freigabe.py --offline  # ohne API-Key testbar; schreibt daten/protokoll.csv
 ```
 
 ## 📁 Struktur
@@ -37,10 +41,13 @@ python demo.py --offline  # Trockenlauf ohne API-Key (nur Freigabe-Logik)
 Black-Mango/
 ├── requirements.txt
 ├── .env.example              # Vorlage für GOOGLE_API_KEY / MODEL_NAME / LERNPHASE
-├── demo.py                   # führt alle Beispiel-Bewertungen durch
+├── demo.py                   # führt alle Beispiel-Bewertungen durch (nur Anzeige)
+├── freigabe.py               # Freigabe-Schritt: übernehmen/korrigieren + speichern
+├── daten/                    # Lern-Protokoll (protokoll.csv, gitignored)
 └── bewertungsagent/
     ├── config.py             # Umgebungsvariablen, Modellname, Lernphase-Schalter
     ├── agent.py              # System-Prompt, Entwurf erzeugen, Freigabe-Logik
+    ├── protokoll.py          # Gedächtnis: Protokoll speichern/laden (CSV)
     └── beispiele.py          # 5 Test-Bewertungen (Gastro/Hotel, gemischte Sterne)
 ```
 
@@ -54,9 +61,9 @@ nicht gegenkontern, keine Mitarbeiternamen, 2–4 Sätze. Zusätzlich erzwingt
 
 ## 🗺️ Roadmap
 
-- **Woche 1 (jetzt):** Projektstruktur, modularer Agent, Testsammlung, Demo. ✅
-- **Woche 2:** Lern-Protokoll (Original + Entwurf + finale Antwort + „geändert?")
-  in CSV/SQLite speichern; Vorbereitung Google-Anbindung via Zapier-Webhook.
+- **Woche 1:** Projektstruktur, modularer Agent, Testsammlung, Demo. ✅
+- **Woche 2 (jetzt):** Lern-Protokoll (Original + Entwurf + finale Antwort +
+  „geändert?") in CSV speichern (`protokoll.py` + `freigabe.py`). ✅
 - **Woche 3:** Few-Shot – beste gespeicherte Antworten automatisch in den Prompt
   laden; einfache Streamlit-Oberfläche mit Freigabe-Button.
 - **Woche 4:** Mit echtem Testbetrieb nutzen, Ton feinjustieren, stabilisieren.
