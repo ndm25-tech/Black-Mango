@@ -20,8 +20,9 @@ def _als_bool(wert: str) -> bool:
     return str(wert).strip().lower() in ("1", "true", "yes", "ja", "on")
 
 
-# Modellname mit Bindestrichen + Dezimalpunkt (z. B. "gemini-2.5-flash").
-MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.5-flash")
+# Modellname mit Bindestrichen + Dezimalpunkt (z. B. "gemini-2.5-flash-lite").
+# "lite" ist leichter/günstiger und hat ein separates Gratis-Tageskontingent.
+MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.5-flash-lite")
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 

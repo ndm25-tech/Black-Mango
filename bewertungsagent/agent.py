@@ -9,8 +9,13 @@ damit sich das Modul ohne installiertes langchain importieren lässt.
 """
 
 import random
+import time
 
 from . import config, protokoll, stil_bibliothek
+
+
+class TageslimitErreicht(RuntimeError):
+    """Das kostenlose Tageskontingent des Modells ist aufgebraucht (429 PerDay)."""
 
 SYSTEM_PROMPT = """
 Du beantwortest Google-Bewertungen für einen Gastronomie- oder Hotelbetrieb in
@@ -59,6 +64,35 @@ def _get_llm():
             temperature=config.TEMPERATURE,
         )
     return _llm
+
+
+def _invoke_mit_retry(nachrichten: list[dict], versuche: int = 3):
+    """Ruft das Modell auf und geht mit Rate-Limits (429) sinnvoll um.
+
+    - Tageslimit (Meldung enthält "PerDay") -> sofort TageslimitErreicht, kein Retry
+      (das Kontingent kommt erst am nächsten Tag zurück).
+    - Kurzzeitiges Limit (pro Minute) -> kurz warten und erneut versuchen.
+    """
+    letzter_fehler = None
+    for versuch in range(versuche):
+        try:
+            return _get_llm().invoke(nachrichten)
+        except Exception as fehler:  # noqa: BLE001 - Fehlermeldung wird ausgewertet
+            letzter_fehler = fehler
+            text = str(fehler)
+            ist_limit = "429" in text or "RESOURCE_EXHAUSTED" in text.upper()
+            if not ist_limit:
+                raise
+            if "PerDay" in text:
+                raise TageslimitErreicht(
+                    "Das kostenlose Tageslimit dieses Modells ist erreicht. "
+                    "Wechsle MODEL_NAME in der .env (z. B. gemini-2.5-flash) "
+                    "oder versuche es morgen wieder."
+                ) from fehler
+            # Kurzzeitiges Limit: kurz warten und noch einmal versuchen.
+            if versuch < versuche - 1:
+                time.sleep(8)
+    raise letzter_fehler
 
 
 def gefundene_risikowoerter(review_text: str) -> list[str]:
@@ -130,7 +164,7 @@ def antwort_erzeugen(betrieb: str, review_text: str, sterne: int) -> dict:
     nachrichten = baue_nachrichten(betrieb, review_text, sterne)
     # Anzahl Few-Shot-Beispiele = alle Paare außer system + aktueller Bewertung.
     fewshot_anzahl = (len(nachrichten) - 2) // 2
-    antwort = _get_llm().invoke(nachrichten)
+    antwort = _invoke_mit_retry(nachrichten)
     return {
         "entwurf": antwort.content.strip(),
         "freigabe_noetig": braucht_freigabe(review_text, sterne),

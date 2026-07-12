@@ -29,6 +29,20 @@ def hole_entwurf(bewertung: dict, offline: bool) -> str:
     return ergebnis["entwurf"]
 
 
+def versuche_entwurf(bewertung: dict, offline: bool, index: int) -> bool:
+    """Erzeugt einen Entwurf und fängt API-Limits sauber ab (kein Absturz)."""
+    try:
+        with st.spinner("Gemini schreibt …" if not offline else "…"):
+            st.session_state.entwurf = hole_entwurf(bewertung, offline)
+        st.session_state.entwurf_fuer = index
+        return True
+    except agent.TageslimitErreicht as fehler:
+        st.error(f"🚦 {fehler}")
+    except Exception as fehler:  # noqa: BLE001 - dem Nutzer klar anzeigen
+        st.error(f"Gemini-Aufruf fehlgeschlagen: {fehler}")
+    return False
+
+
 # ---------------------------------------------------------------- Seitenleiste
 st.sidebar.title("⚙️ Einstellungen")
 offline = st.sidebar.checkbox(
@@ -90,15 +104,24 @@ if risiko:
 elif freigabe:
     st.warning("🔒 Freigabe nötig (Lernphase oder weniger als 5 Sterne).")
 
-# Entwurf einmal pro Bewertung erzeugen
-if st.session_state.entwurf_fuer != i:
-    try:
-        with st.spinner("Entwurf wird erzeugt …"):
-            st.session_state.entwurf = hole_entwurf(bewertung, offline)
-        st.session_state.entwurf_fuer = i
-    except Exception as fehler:  # noqa: BLE001 - dem Nutzer klar anzeigen
-        st.error(f"Gemini-Aufruf fehlgeschlagen: {fehler}")
-        st.stop()
+hat_entwurf = st.session_state.entwurf_fuer == i
+
+# Offline ist gratis -> Entwurf sofort erzeugen. Echt-Modus -> erst auf Klick (spart Anfragen).
+if offline and not hat_entwurf:
+    versuche_entwurf(bewertung, offline=True, index=i)
+    hat_entwurf = st.session_state.entwurf_fuer == i
+
+if not hat_entwurf:
+    st.caption("Noch kein Entwurf — jede Erzeugung verbraucht eine Gemini-Anfrage.")
+    knopf1, knopf2 = st.columns(2)
+    if knopf1.button("✍️ Entwurf mit Gemini erzeugen", type="primary"):
+        if versuche_entwurf(bewertung, offline=False, index=i):
+            st.rerun()
+    if knopf2.button("⏭️ Überspringen"):
+        st.session_state.index += 1
+        st.session_state.entwurf_fuer = -1
+        st.rerun()
+    st.stop()
 
 finale_antwort = st.text_area(
     "KI-Entwurf (bearbeitbar):",
@@ -121,8 +144,8 @@ if spalte1.button("✅ Freigeben & speichern", type="primary"):
     st.rerun()
 
 if spalte2.button("🔄 Neu generieren"):
-    st.session_state.entwurf_fuer = -1
-    st.rerun()
+    if versuche_entwurf(bewertung, offline, index=i):
+        st.rerun()
 
 if spalte3.button("⏭️ Überspringen"):
     st.session_state.index += 1
