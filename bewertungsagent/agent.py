@@ -8,26 +8,30 @@ Der LLM-Import passiert bewusst erst beim ersten echten Aufruf (lazy),
 damit sich das Modul ohne installiertes langchain importieren lässt.
 """
 
-from . import config, protokoll
+import random
+
+from . import config, protokoll, stil_bibliothek
 
 SYSTEM_PROMPT = """
-Du schreibst für einen Gastronomie- oder Hotelbetrieb in Deutschland Antworten
-auf Google-Bewertungen. Persönlich, warm und professionell, als käme die Antwort
-vom Inhaber bzw. dem Team.
+Du beantwortest Google-Bewertungen für einen Gastronomie- oder Hotelbetrieb in
+Deutschland. Schreib so, wie es der Inhaber selbst tun würde: warm, echt und
+persönlich. Man soll NICHT merken, dass eine KI antwortet.
+
+SO KLINGT ES MENSCHLICH:
+- Geh konkret auf das ein, was in der Bewertung wirklich steht — keine Floskeln.
+- Fang NICHT jede Antwort mit "Vielen Dank" an; variiere den Einstieg.
+- Kurz halten: 2 bis 3 Sätze. Kein langes, gestelztes Ende, kein "bla bla".
+- Lockere, natürliche Sprache; ruhig etwas Persönlichkeit und echte Freude zeigen.
 
 FESTE REGELN (immer einhalten):
-- Antworte konkret auf den Inhalt der Bewertung, keine Standard-Floskeln.
 - Immer Sie-Form. Echte Umlaute (ä, ö, ü, ß). Keine Ausrufezeichen-Flut.
-- Bei Kritik: ruhig, sachlich, deeskalierend. Höchstens einmal "das tut uns leid".
-- Nichts erfinden. Nichts versprechen (keine Gutscheine, Rabatte oder Zusagen).
-- Bei unbelegbaren Vorwürfen (z. B. "ihr seid Diebe") NICHT mit einer
-  Gegenbehauptung kontern ("Sie waren nie hier", "das ist gelogen"). Stattdessen
-  ruhig bleiben, sachlich Bedauern/Überraschung ausdrücken und um direkten
-  Kontakt zur Klärung bitten.
+- Bei Kritik: ruhig, sachlich, deeskalierend. Höchstens einmal kurz Bedauern.
+- Nichts erfinden, nichts versprechen (keine Gutscheine, Rabatte, Zusagen).
+- Bei unbelegbaren Vorwürfen (z. B. "ihr seid Diebe") NICHT gegenkontern und NICHT
+  streiten. Ruhig bleiben, Überraschung/Bedauern zeigen und um direkten Kontakt zur
+  Klärung bitten.
 - Keine Mitarbeiternamen nennen, auch wenn die Bewertung sie nennt.
-- Keine Werbung in der Antwort.
-- Länge 2 bis 4 Sätze, mit einer freundlichen Grußformel im Namen des Teams.
-- DSGVO: personenbezogene Daten sparsam behandeln.
+- Keine Werbung.
 
 Gib NUR die fertige Antwort aus, ohne Vorrede und ohne Anführungszeichen.
 """.strip()
@@ -49,7 +53,11 @@ def _get_llm():
         from langchain.chat_models import init_chat_model
 
         config.pruefe_api_key()
-        _llm = init_chat_model(config.MODEL_NAME, model_provider="google_genai")
+        _llm = init_chat_model(
+            config.MODEL_NAME,
+            model_provider="google_genai",
+            temperature=config.TEMPERATURE,
+        )
     return _llm
 
 
@@ -86,7 +94,20 @@ def baue_nachrichten(betrieb: str, review_text: str, sterne: int) -> list[dict]:
     """
     nachrichten = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-    # Gedächtnis: die besten bisherigen Antworten als Vorbild (Bewertung -> Antwort).
+    # Grund-Vorbilder aus der Stil-Bibliothek — zufällige Auswahl sorgt für Abwechslung
+    # (verschiedene Muster je Aufruf → "Neu generieren" fühlt sich frischer an).
+    bibliothek = stil_bibliothek.STIL_BEISPIELE
+    anzahl_bib = min(config.ANZAHL_STIL_BIBLIOTHEK, len(bibliothek))
+    for bsp in random.sample(bibliothek, anzahl_bib):
+        nachrichten.append({
+            "role": "user",
+            "content": _baue_user_nachricht(
+                bsp.get("betrieb", ""), bsp.get("original", ""), bsp.get("sterne", ""),
+            ),
+        })
+        nachrichten.append({"role": "assistant", "content": bsp.get("finale_antwort", "")})
+
+    # Gedächtnis: die besten bisherigen Antworten als persönliches Vorbild.
     for bsp in protokoll.beste_beispiele(n=config.ANZAHL_FEWSHOT):
         nachrichten.append({
             "role": "user",

@@ -52,7 +52,8 @@ Black-Mango/
     ├── config.py             # Umgebungsvariablen, Modellname, Lernphase-Schalter
     ├── agent.py              # System-Prompt, Entwurf erzeugen, Freigabe-Logik
     ├── protokoll.py          # Gedächtnis: Protokoll speichern/laden (CSV)
-    └── beispiele.py          # 5 Test-Bewertungen (Gastro/Hotel, gemischte Sterne)
+    ├── stil_bibliothek.py    # menschliche Muster-Antworten als Grund-Vorbild
+    └── beispiele.py          # Test-Bewertungen (Gastro/Hotel, gemischte Sterne)
 ```
 
 ## 🔒 Regeln (Recht & Sicherheit)

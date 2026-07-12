@@ -31,6 +31,13 @@ LERNPHASE = _als_bool(os.getenv("LERNPHASE", "true"))
 # Few-Shot: so viele der besten (unveränderten) Antworten als Vorbild in den Prompt.
 ANZAHL_FEWSHOT = int(os.getenv("ANZAHL_FEWSHOT", "3"))
 
+# So viele Muster-Antworten aus der Stil-Bibliothek als Grund-Vorbild mitgeben.
+ANZAHL_STIL_BIBLIOTHEK = int(os.getenv("ANZAHL_STIL_BIBLIOTHEK", "3"))
+
+# Kreativität des Modells (0 = immer gleich/steif, ~1 = abwechslungsreich/natürlich).
+# Höher = "Neu generieren" bringt echte Varianten und der Ton klingt menschlicher.
+TEMPERATURE = float(os.getenv("TEMPERATURE", "0.85"))
+
 
 def pruefe_api_key() -> None:
     """Wirft einen klaren Fehler, wenn der API-Key fehlt."""
