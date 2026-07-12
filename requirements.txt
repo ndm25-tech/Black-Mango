@@ -1,4 +1,5 @@
-# Bewertungs-Antwort-Agent — Abhängigkeiten (Woche 1)
+# Bewertungs-Antwort-Agent — Abhängigkeiten
 langchain>=0.3
 langchain-google-genai>=2.0
 python-dotenv>=1.0
+streamlit>=1.30      # Oberfläche (Woche 4): streamlit run app.py

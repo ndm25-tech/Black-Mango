@@ -33,6 +33,9 @@ python demo.py --offline  # Trockenlauf ohne API-Key (nur Freigabe-Logik)
 # 4. Freigabe + Gedächtnis (Woche 2): Entwurf prüfen und speichern
 python freigabe.py            # echte Entwürfe, ENTER=übernehmen / Text=korrigieren
 python freigabe.py --offline  # ohne API-Key testbar; schreibt daten/protokoll.csv
+
+# 5. Oberfläche (Woche 4): Freigabe per Klick im Browser
+streamlit run app.py          # öffnet ein Fenster mit Freigabe-Knopf
 ```
 
 ## 📁 Struktur
@@ -42,7 +45,8 @@ Black-Mango/
 ├── requirements.txt
 ├── .env.example              # Vorlage für GOOGLE_API_KEY / MODEL_NAME / LERNPHASE
 ├── demo.py                   # führt alle Beispiel-Bewertungen durch (nur Anzeige)
-├── freigabe.py               # Freigabe-Schritt: übernehmen/korrigieren + speichern
+├── freigabe.py               # Freigabe-Schritt (Kommandozeile): übernehmen/korrigieren
+├── app.py                    # Streamlit-Oberfläche: Freigabe per Klick
 ├── daten/                    # Lern-Protokoll (protokoll.csv, gitignored)
 └── bewertungsagent/
     ├── config.py             # Umgebungsvariablen, Modellname, Lernphase-Schalter
@@ -67,5 +71,5 @@ nicht gegenkontern, keine Mitarbeiternamen, 2–4 Sätze. Zusätzlich erzwingt
 - **Woche 3 (jetzt):** Few-Shot – die besten (unveränderten) gespeicherten
   Antworten werden automatisch als Vorbild in den Prompt geladen
   (`agent.baue_nachrichten`). Damit „lernt" der Agent deinen Stil. ✅
-- **Woche 4:** Einfache Oberfläche (Streamlit) mit Freigabe-Button; mit echtem
-  Testbetrieb nutzen, Ton feinjustieren, stabilisieren.
+- **Woche 4 (jetzt):** Streamlit-Oberfläche (`app.py`) mit Freigabe-Button. ✅
+- **Später:** Google-Anbindung (Zapier-Webhook), echter Testbetrieb, Ton feinjustieren.
