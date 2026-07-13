@@ -72,10 +72,13 @@ def lade_alle() -> list[dict]:
 
 
 def beste_beispiele(n: int = 3) -> list[dict]:
-    """Vorbereitung Woche 3: unveränderte Entwürfe = gute Vorbilder (Few-Shot).
+    """Die zuletzt freigegebenen Antworten als Stil-Vorbild (Few-Shot).
 
-    Wenn der Mensch einen Entwurf NICHT ändern musste, war er gut. Genau solche
-    Beispiele wollen wir später in den Prompt geben. Hier nur eingesammelt.
+    Jede `finale_antwort` ist eine vom Menschen freigegebene Antwort — egal ob der
+    KI-Entwurf übernommen (geaendert=nein) ODER selbst geschrieben/korrigiert wurde
+    (geaendert=ja). Beide zeigen den gewünschten Stil (siehe Briefing). Deshalb nehmen
+    wir die neuesten Einträge mit echtem Antworttext, nicht nur die unveränderten —
+    sonst würden gerade die selbst geschriebenen Top-Antworten ignoriert.
     """
-    gute = [z for z in lade_alle() if z.get("geaendert") == "nein"]
-    return gute[-n:]  # die n neuesten guten Beispiele
+    mit_antwort = [z for z in lade_alle() if (z.get("finale_antwort") or "").strip()]
+    return mit_antwort[-n:]  # die n neuesten freigegebenen Antworten
