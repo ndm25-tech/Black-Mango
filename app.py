@@ -49,7 +49,7 @@ offline = st.sidebar.checkbox(
     "Offline-Modus (ohne Gemini)", value=not bool(config.GOOGLE_API_KEY)
 )
 st.sidebar.write("API-Key gefunden:", "✅ ja" if config.GOOGLE_API_KEY else "❌ nein")
-st.sidebar.write("Modell:", config.MODEL_NAME)
+st.sidebar.write("Modell:", agent.aktives_modell())
 st.sidebar.write("Protokoll-Einträge:", len(protokoll.lade_alle()))
 st.sidebar.write(
     "Few-Shot-Vorbilder:", len(protokoll.beste_beispiele(n=config.ANZAHL_FEWSHOT))

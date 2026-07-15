@@ -52,46 +52,83 @@ RISIKO_WOERTER = [
     "rassist", "rassistisch", "beleidigt", "beleidigung", "geklaut",
 ]
 
+# Aktuelle Modelle als Rückfall, falls das eingestellte Modell nicht (mehr) verfügbar ist.
+FALLBACK_MODELLE = ["gemini-2.5-flash-lite", "gemini-2.5-flash"]
+
 _llm = None
+_aktuelles_modell = None
+
+
+def _baue_llm(modell: str):
+    from langchain.chat_models import init_chat_model
+
+    return init_chat_model(
+        modell, model_provider="google_genai", temperature=config.TEMPERATURE
+    )
 
 
 def _get_llm():
     """Initialisiert das Gemini-Modell lazy (erst beim ersten echten Aufruf)."""
-    global _llm
+    global _llm, _aktuelles_modell
     if _llm is None:
-        from langchain.chat_models import init_chat_model
-
         config.pruefe_api_key()
-        _llm = init_chat_model(
-            config.MODEL_NAME,
-            model_provider="google_genai",
-            temperature=config.TEMPERATURE,
-        )
+        _aktuelles_modell = config.MODEL_NAME
+        _llm = _baue_llm(_aktuelles_modell)
     return _llm
 
 
-def _invoke_mit_retry(nachrichten: list[dict], versuche: int = 3):
-    """Ruft das Modell auf und geht mit Rate-Limits (429) sinnvoll um.
+def aktives_modell() -> str:
+    """Das tatsächlich genutzte Modell (kann durch Auto-Wechsel vom .env-Wert abweichen)."""
+    return _aktuelles_modell or config.MODEL_NAME
 
-    - Tageslimit (Meldung enthält "PerDay") -> sofort TageslimitErreicht, kein Retry
-      (das Kontingent kommt erst am nächsten Tag zurück).
+
+def _invoke_mit_retry(nachrichten: list[dict], versuche: int = 4):
+    """Ruft das Modell auf und behebt typische Fehler selbstständig.
+
+    - Modell nicht (mehr) verfügbar (404) -> automatisch aufs nächste aktuelle Modell
+      umschalten (self-healing), statt abzustürzen.
+    - Tageslimit (Meldung enthält "PerDay") -> TageslimitErreicht, kein Retry.
     - Kurzzeitiges Limit (pro Minute) -> kurz warten und erneut versuchen.
     """
+    global _llm, _aktuelles_modell
     letzter_fehler = None
+    versuchte_modelle: set = set()
     for versuch in range(versuche):
         try:
-            return _get_llm().invoke(nachrichten)
+            llm = _get_llm()
+            versuchte_modelle.add(_aktuelles_modell)
+            return llm.invoke(nachrichten)
         except Exception as fehler:  # noqa: BLE001 - Fehlermeldung wird ausgewertet
             letzter_fehler = fehler
             text = str(fehler)
+
+            # 1) Modell existiert nicht mehr -> auf ein aktuelles Fallback-Modell wechseln.
+            modell_weg = (
+                "404" in text
+                or "NOT_FOUND" in text.upper()
+                or "no longer available" in text.lower()
+            )
+            if modell_weg:
+                naechstes = next(
+                    (m for m in FALLBACK_MODELLE if m not in versuchte_modelle), None
+                )
+                if naechstes:
+                    _aktuelles_modell = naechstes
+                    _llm = _baue_llm(naechstes)
+                    continue
+                raise RuntimeError(
+                    "Kein verfügbares Modell gefunden. Setze MODEL_NAME in der .env "
+                    "auf ein aktuelles Modell (z. B. gemini-2.5-flash-lite)."
+                ) from fehler
+
+            # 2) Kontingent-Fehler (429).
             ist_limit = "429" in text or "RESOURCE_EXHAUSTED" in text.upper()
             if not ist_limit:
                 raise
             if "PerDay" in text:
                 raise TageslimitErreicht(
-                    "Das kostenlose Tageslimit dieses Modells ist erreicht. "
-                    "Wechsle MODEL_NAME in der .env (z. B. gemini-2.5-flash) "
-                    "oder versuche es morgen wieder."
+                    "Das Tageslimit dieses Modells ist erreicht. Aktiviere Billing in "
+                    "Google AI Studio oder versuche es morgen wieder."
                 ) from fehler
             # Kurzzeitiges Limit: kurz warten und noch einmal versuchen.
             if versuch < versuche - 1:

@@ -34,9 +34,15 @@ python demo.py --offline  # Trockenlauf ohne API-Key (nur Freigabe-Logik)
 python freigabe.py            # echte Entwürfe, ENTER=übernehmen / Text=korrigieren
 python freigabe.py --offline  # ohne API-Key testbar; schreibt daten/protokoll.csv
 
-# 5. Oberfläche (Woche 4): Freigabe per Klick im Browser
-streamlit run app.py          # öffnet ein Fenster mit Freigabe-Knopf
+# 5. Oberfläche starten — am einfachsten mit dem Start-Skript:
+bash start.sh                 # aktiviert .venv UND startet die App (ein Befehl)
+# ... oder klassisch:
+streamlit run app.py
 ```
+
+> 💡 `bash start.sh` verhindert „command not found" (aktiviert automatisch die
+> Umgebung). Und falls ein Modell abgeschaltet wurde, wechselt die App selbstständig
+> auf ein aktuelles (siehe `FALLBACK_MODELLE` in `agent.py`).
 
 ## 📁 Struktur
 
