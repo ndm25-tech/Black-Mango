@@ -144,4 +144,107 @@ BEISPIEL_BEWERTUNGEN = [
             "ist Betrug, ich denke über eine Anzeige nach."
         ),
     },
+
+    # ---- Neue, realistische Alltags-Situationen (verschiedene Betriebe) ----
+    {
+        "betrieb": "Lieferservice Sonnenschein",
+        "sterne": 5,
+        "text": (
+            "Online bestellt, pünktlich und noch heiß geliefert. Die Portionen "
+            "waren großzügig und alles ordentlich verpackt. Gerne wieder!"
+        ),
+    },
+    {
+        "betrieb": "Restaurant Lindenhof",
+        "sterne": 2,
+        "text": (
+            "Wir hatten einen Tisch reserviert und mussten trotzdem gut 20 "
+            "Minuten warten, bis wir gesetzt wurden. Das Essen war okay, aber "
+            "der Empfang war enttäuschend."
+        ),
+    },
+    {
+        "betrieb": "Restaurant Grüner Baum",
+        "sterne": 5,
+        "text": (
+            "Ich habe eine Glutenunverträglichkeit und das Team hat mir super "
+            "geholfen, passende Gerichte zu finden. Sehr aufmerksam und richtig "
+            "lecker."
+        ),
+    },
+    {
+        "betrieb": "Familienrestaurant Anker",
+        "sterne": 4,
+        "text": (
+            "Als Familie mit zwei kleinen Kindern haben wir uns sehr wohlgefühlt. "
+            "Es gibt Hochstühle und eine Kinderkarte. Nur auf die Rechnung mussten "
+            "wir etwas lange warten."
+        ),
+    },
+    {
+        "betrieb": "Bar & Küche Nova",
+        "sterne": 3,
+        "text": (
+            "Das Essen war gut, aber die Musik war so laut, dass eine Unterhaltung "
+            "kaum möglich war. Die Einrichtung ist ansonsten wirklich schön."
+        ),
+    },
+    {
+        "betrieb": "Gasthaus Adler",
+        "sterne": 2,
+        "text": (
+            "Das Essen war in Ordnung, aber die Bedienung wirkte genervt und "
+            "unfreundlich. Das trübt leider den Gesamteindruck."
+        ),
+    },
+    {
+        "betrieb": "Restaurant Belvedere",
+        "sterne": 5,
+        "text": (
+            "Wir haben einen Geburtstag gefeiert und das Team hat spontan eine "
+            "kleine Überraschung mit Kerze gezaubert. Eine tolle Geste!"
+        ),
+    },
+    {
+        "betrieb": "Bistro Ecke",
+        "sterne": 2,
+        "text": (
+            "Die Vorspeise war klasse, aber der Hauptgang kam lauwarm. Er wurde "
+            "auf Nachfrage aufgewärmt, aber der Moment war dahin."
+        ),
+    },
+    {
+        "betrieb": "Mittagstisch Kantine 7",
+        "sterne": 4,
+        "text": (
+            "Faire Preise für gute Qualität, der Mittagstisch ist ein echtes "
+            "Schnäppchen. Kleiner Minuspunkt: die Auswahl an vegetarischen "
+            "Gerichten ist begrenzt."
+        ),
+    },
+    {
+        "betrieb": "Pizzeria Vulkan",
+        "sterne": 2,
+        "text": (
+            "Wir haben zweimal die falsche Bestellung bekommen. Das Personal hat "
+            "sich zwar entschuldigt, aber es hat den ganzen Abend verzögert."
+        ),
+    },
+    {
+        "betrieb": "Café Alt-Wien",
+        "sterne": 5,
+        "text": (
+            "Seit Jahren Stammgäste und nie enttäuscht. Gleichbleibend hohe "
+            "Qualität und immer ein herzlicher Empfang."
+        ),
+    },
+    {
+        # Prüf-Fall: harscher Ton + Risikowort (Gesundheitsamt) -> ruhig, nicht gegenkontern.
+        "betrieb": "Restaurant Panorama",
+        "sterne": 1,
+        "text": (
+            "Absolute Frechheit, das Essen war kaum genießbar und die Bedienung "
+            "patzig. Ich überlege, das Gesundheitsamt zu informieren."
+        ),
+    },
 ]

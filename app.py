@@ -62,6 +62,10 @@ if "entwurf" not in st.session_state:
     st.session_state.entwurf = ""
 if "entwurf_fuer" not in st.session_state:
     st.session_state.entwurf_fuer = -1
+if "fehler_fuer" not in st.session_state:
+    st.session_state.fehler_fuer = -1
+if "gen" not in st.session_state:
+    st.session_state.gen = 0
 
 # ------------------------------------------------------------------- Hauptseite
 st.title("💬 Bewertungs-Antwort-Agent")
@@ -106,20 +110,24 @@ elif freigabe:
 
 hat_entwurf = st.session_state.entwurf_fuer == i
 
-# Offline ist gratis -> Entwurf sofort erzeugen. Echt-Modus -> erst auf Klick (spart Anfragen).
-if offline and not hat_entwurf:
-    versuche_entwurf(bewertung, offline=True, index=i)
-    hat_entwurf = st.session_state.entwurf_fuer == i
+# Entwurf AUTOMATISCH erzeugen, sobald die Bewertung erscheint (offline wie echt).
+# Schlägt es fehl (Limit/Fehler), NICHT endlos neu versuchen -> per fehler_fuer merken.
+if not hat_entwurf and st.session_state.fehler_fuer != i:
+    if versuche_entwurf(bewertung, offline, index=i):
+        hat_entwurf = True
+    else:
+        st.session_state.fehler_fuer = i
 
 if not hat_entwurf:
-    st.caption("Noch kein Entwurf — jede Erzeugung verbraucht eine Gemini-Anfrage.")
+    # Erzeugung fehlgeschlagen (Meldung wurde schon angezeigt) -> Auswahl anbieten.
     knopf1, knopf2 = st.columns(2)
-    if knopf1.button("✍️ Entwurf mit Gemini erzeugen", type="primary"):
-        if versuche_entwurf(bewertung, offline=False, index=i):
-            st.rerun()
+    if knopf1.button("🔄 Erneut versuchen", type="primary"):
+        st.session_state.fehler_fuer = -1
+        st.rerun()
     if knopf2.button("⏭️ Überspringen"):
         st.session_state.index += 1
         st.session_state.entwurf_fuer = -1
+        st.session_state.fehler_fuer = -1
         st.rerun()
     st.stop()
 
@@ -127,7 +135,7 @@ finale_antwort = st.text_area(
     "KI-Entwurf (bearbeitbar):",
     value=st.session_state.entwurf,
     height=170,
-    key=f"textfeld_{i}",
+    key=f"textfeld_{i}_{st.session_state.gen}",
 )
 
 spalte1, spalte2, spalte3 = st.columns(3)
@@ -141,13 +149,16 @@ if spalte1.button("✅ Freigeben & speichern", type="primary"):
     )
     st.session_state.index += 1
     st.session_state.entwurf_fuer = -1
+    st.session_state.fehler_fuer = -1
     st.rerun()
 
 if spalte2.button("🔄 Neu generieren"):
     if versuche_entwurf(bewertung, offline, index=i):
+        st.session_state.gen += 1  # frisches Textfeld -> neuer Entwurf wird sichtbar
         st.rerun()
 
 if spalte3.button("⏭️ Überspringen"):
     st.session_state.index += 1
     st.session_state.entwurf_fuer = -1
+    st.session_state.fehler_fuer = -1
     st.rerun()
