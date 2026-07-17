@@ -71,6 +71,24 @@ def lade_alle() -> list[dict]:
         return list(csv.DictReader(f))
 
 
+def loesche(index: int) -> bool:
+    """Entfernt einen Eintrag aus dem Protokoll (Gedächtnis-Pflege).
+
+    So kann der Betreiber schlechte Vorbilder entfernen (z. B. eine Antwort, die
+    einen Namen nennt), damit die KI nur gute Muster lernt. Gibt True zurück,
+    wenn ein Eintrag gelöscht wurde.
+    """
+    zeilen = lade_alle()
+    if not 0 <= index < len(zeilen):
+        return False
+    zeilen.pop(index)
+    with CSV_PFAD.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=SPALTEN)
+        writer.writeheader()
+        writer.writerows(zeilen)
+    return True
+
+
 def beste_beispiele(n: int = 3) -> list[dict]:
     """Die zuletzt freigegebenen Antworten als Stil-Vorbild (Few-Shot).
 
@@ -82,3 +100,20 @@ def beste_beispiele(n: int = 3) -> list[dict]:
     """
     mit_antwort = [z for z in lade_alle() if (z.get("finale_antwort") or "").strip()]
     return mit_antwort[-n:]  # die n neuesten freigegebenen Antworten
+
+
+def loesche(index: int) -> bool:
+    """Entfernt einen Eintrag (0-basierter Index) und schreibt die CSV neu.
+
+    Für die Gedächtnis-Pflege: schlechte Vorbilder rauswerfen, damit die KI nur
+    aus guten Beispielen lernt. Gibt True zurück, wenn etwas gelöscht wurde.
+    """
+    zeilen = lade_alle()
+    if not (0 <= index < len(zeilen)):
+        return False
+    zeilen.pop(index)
+    with CSV_PFAD.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=SPALTEN)
+        writer.writeheader()
+        writer.writerows(zeilen)
+    return True

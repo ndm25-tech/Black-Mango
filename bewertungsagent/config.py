@@ -39,6 +39,14 @@ ANZAHL_STIL_BIBLIOTHEK = int(os.getenv("ANZAHL_STIL_BIBLIOTHEK", "3"))
 # Höher = "Neu generieren" bringt echte Varianten und der Ton klingt menschlicher.
 TEMPERATURE = float(os.getenv("TEMPERATURE", "0.85"))
 
+# Passwort für den geheimen Entwickler-Bereich der App.
+# Leer lassen = Entwickler-Bereich ist komplett deaktiviert (Kunden sehen nie etwas).
+ENTWICKLER_PASSWORT = os.getenv("ENTWICKLER_PASSWORT", "")
+
+# Passwort für den geheimen Entwickler-Bereich in der App (nur für den Betreiber).
+# Leer lassen = der Entwickler-Bereich ist komplett deaktiviert.
+ENTWICKLER_PASSWORT = os.getenv("ENTWICKLER_PASSWORT", "")
+
 
 def pruefe_api_key() -> None:
     """Wirft einen klaren Fehler, wenn der API-Key fehlt."""
