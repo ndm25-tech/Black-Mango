@@ -40,7 +40,6 @@ for schluessel, startwert in {
     "entwurf_fuer": -1,  # für welchen Index der Entwurf gilt
     "fehler_fuer": -1,   # für welchen Index die Erzeugung fehlschlug (kein Endlos-Retry)
     "gen": 0,            # zählt Neu-Generierungen -> frisches Textfeld
-    "letzte_antwort": "",
     "dev": False,        # Entwickler-Bereich freigeschaltet?
 }.items():
     if schluessel not in st.session_state:
@@ -141,11 +140,6 @@ if ansicht == "Entwickler":
 st.title("💬 Bewertungs-Antwort-Agent")
 st.caption("Für jede Bewertung eine fertige, persönliche Antwort — sofort einsetzbar.")
 
-# Zuletzt übernommene Antwort als Kopier-Block anzeigen (mit eingebautem Kopier-Knopf).
-if st.session_state.letzte_antwort:
-    st.success("Antwort übernommen — mit dem Symbol rechts oben kopieren:")
-    st.code(st.session_state.letzte_antwort, language=None)
-
 gesamt = len(BEISPIEL_BEWERTUNGEN)
 i = st.session_state.index
 
@@ -155,7 +149,6 @@ if i >= gesamt:
         st.session_state.index = 0
         st.session_state.entwurf_fuer = -1
         st.session_state.fehler_fuer = -1
-        st.session_state.letzte_antwort = ""
         st.rerun()
     st.stop()
 
@@ -213,7 +206,6 @@ if spalte1.button("✅ Antwort übernehmen", type="primary"):
         st.session_state.entwurf,
         finale_antwort,
     )
-    st.session_state.letzte_antwort = finale_antwort
     st.session_state.index += 1
     st.session_state.entwurf_fuer = -1
     st.session_state.fehler_fuer = -1
