@@ -137,9 +137,7 @@ if ansicht == "Entwickler":
 
 
 # ================================================================== KUNDE
-st.title("💬 Bewertungs-Antwort-Agent")
-st.caption("Für jede Bewertung eine fertige, persönliche Antwort — sofort einsetzbar.")
-
+# Bewusst KEINE große Überschrift — die Ansicht bleibt so schlicht wie möglich.
 gesamt = len(BEISPIEL_BEWERTUNGEN)
 i = st.session_state.index
 
