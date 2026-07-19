@@ -1,0 +1,14 @@
+# Umgebung / Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Lern-Protokoll (wird ab Woche 2 lokal erzeugt)
+daten/*.csv
+daten/*.sqlite
