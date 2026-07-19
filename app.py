@@ -19,6 +19,28 @@ from bewertungsagent.beispiele import BEISPIEL_BEWERTUNGEN
 
 st.set_page_config(page_title="Bewertungs-Antwort-Agent", page_icon="💬")
 
+# Feinschliff fürs dunkle Theme (.streamlit/config.toml): runde Knöpfe, weiche Karten.
+st.markdown(
+    """
+    <style>
+      .stButton > button {
+          border-radius: 10px;
+          padding: 0.55rem 1.1rem;
+          font-weight: 600;
+          border: 1px solid rgba(232, 163, 61, 0.35);
+      }
+      .stButton > button:hover { border-color: #e8a33d; }
+      .stTextArea textarea, .stTextInput input {
+          border-radius: 10px;
+      }
+      div[data-testid="stAlert"] { border-radius: 12px; }
+      .stProgress > div > div > div { background-color: #e8a33d; }
+      h3 { letter-spacing: 0.2px; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 # ------------------------------------------------------------------ Hilfsfunktionen
 def erzeuge_antwort(betrieb: str, text: str, sterne: int):

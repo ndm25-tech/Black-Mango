@@ -1,0 +1,11 @@
+# Dunkles Premium-Theme: Nachtblau + warmer Gold-Akzent (statt Standard-Weiß).
+[theme]
+base = "dark"
+primaryColor = "#e8a33d"             # warmes Gold/Amber für Knöpfe & Akzente
+backgroundColor = "#0e1525"          # dunkles Nachtblau
+secondaryBackgroundColor = "#1a2332" # Karten, Eingabefelder, Seitenleiste
+textColor = "#e8eaf0"                # helle, angenehme Schrift
+font = "sans serif"
+
+[server]
+headless = true
