@@ -80,6 +80,23 @@ nicht gegenkontern, keine Mitarbeiternamen, 2–4 Sätze. Zusätzlich erzwingt
 `braucht_freigabe()` eine menschliche Prüfung – in der Lernphase immer, sonst bei
 < 5 Sternen oder erkannten Risiko-Signalwörtern.
 
+## 🌍 Veröffentlichen (Streamlit Community Cloud, kostenlos)
+
+1. Auf **https://share.streamlit.io** gehen → mit **GitHub** anmelden.
+2. **"Create app"** → Repository `ndm25-tech/Black-Mango`, Branch `main`,
+   Main file path: `app.py` → **Deploy**.
+3. In den App-Einstellungen unter **Secrets** eintragen (statt der lokalen `.env`):
+   ```toml
+   GOOGLE_API_KEY = "dein-key"
+   ENTWICKLER_PASSWORT = "dein-geheimes-wort"
+   ```
+4. Fertig — die App bekommt eine feste URL (z. B. `https://….streamlit.app`) und
+   läuft ohne deinen Rechner, auch vom Handy nutzbar.
+
+> ⚠️ Ehrlicher Hinweis: In der Cloud ist `daten/protokoll.csv` **flüchtig** — bei
+> jedem Neustart der App beginnt das Gedächtnis dort leer. Für Demos und erste
+> Kunden okay; eine echte Datenbank kommt mit der Zapier-/Automatik-Stufe.
+
 ## 🗺️ Roadmap
 
 - **Woche 1:** Projektstruktur, modularer Agent, Testsammlung, Demo. ✅
