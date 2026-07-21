@@ -77,13 +77,12 @@ for schluessel, startwert in {
 st.sidebar.title("💬 Bewertungs-Antwort")
 st.sidebar.caption("Ihre Antwort auf jede Google-Bewertung — fertig zum Einfügen.")
 
+# Entwickler-Zugang: KEIN sichtbarer Knopf, kein Passwortfeld. Der Bereich öffnet
+# sich nur über die geheime URL  …/?code=<ENTWICKLER_PASSWORT>  — Besucher der
+# normalen Adresse sehen ausschließlich die Kunden-Ansicht.
 if config.ENTWICKLER_PASSWORT:
-    with st.sidebar.expander("🔧", expanded=False):
-        eingabe = st.text_input("Zugangscode", type="password", key="dev_pw")
-        if eingabe and eingabe == config.ENTWICKLER_PASSWORT:
-            st.session_state.dev = True
-        elif eingabe:
-            st.caption("Falscher Code.")
+    if st.query_params.get("code") == config.ENTWICKLER_PASSWORT:
+        st.session_state.dev = True
 
 ansicht = "Kunde"
 if st.session_state.dev:

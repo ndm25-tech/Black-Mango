@@ -49,10 +49,10 @@ streamlit run app.py
 - **Kunden-Ansicht (Standard):** Bewertung → fertige Antwort → „✅ Übernehmen".
   Keine Technik sichtbar, immer online. Jede übernommene Antwort lehrt den Agenten
   automatisch (Stil-Vorbild fürs nächste Mal).
-- **Entwickler-Bereich (geheim):** `ENTWICKLER_PASSWORT` in der `.env` setzen →
-  in der Seitenleiste unter „🔧" den Code eingeben. Enthält: Gedächtnis ansehen/löschen,
-  eigene Bewertungen testen/lehren, Status (Modell, Zähler). Ohne gesetztes Passwort
-  ist der Bereich komplett unsichtbar.
+- **Entwickler-Bereich (geheim):** komplett unsichtbar — kein Knopf, kein Passwortfeld.
+  Zugang nur über die geheime URL `deine-app-url/?code=<ENTWICKLER_PASSWORT>`.
+  Enthält: Training (Übungs-Bewertungen), Gedächtnis ansehen/löschen, Status.
+  Ohne gesetztes Passwort ist der Bereich komplett deaktiviert.
 
 ## 📁 Struktur
 
