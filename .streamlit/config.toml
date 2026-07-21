@@ -1,10 +1,10 @@
-# Dunkles Premium-Theme: Nachtblau + warmer Gold-Akzent (statt Standard-Weiß).
+# Premium-SaaS-Theme: tiefes Dunkelblau + Indigo-Akzent (Linear/Vercel-Anmutung).
 [theme]
 base = "dark"
-primaryColor = "#e8a33d"             # warmes Gold/Amber für Knöpfe & Akzente
-backgroundColor = "#0e1525"          # dunkles Nachtblau
-secondaryBackgroundColor = "#1a2332" # Karten, Eingabefelder, Seitenleiste
-textColor = "#e8eaf0"                # helle, angenehme Schrift
+primaryColor = "#6366F1"             # Indigo für Buttons, Slider, Akzente
+backgroundColor = "#0B0F19"          # tiefer, hochwertiger Hintergrund
+secondaryBackgroundColor = "#161C2D" # Karten & Eingaben, hebt sich klar ab
+textColor = "#E6E9F2"
 font = "sans serif"
 
 [server]

@@ -19,21 +19,101 @@ from bewertungsagent.beispiele import BEISPIEL_BEWERTUNGEN
 
 st.set_page_config(page_title="Bewertungs-Antwort", page_icon="💬")
 
-# Feinschliff fürs dunkle Theme (.streamlit/config.toml): runde Knöpfe, weiche Karten.
+# Premium-SaaS-Styling (nur Optik): Typografie, Karten, Buttons, Animationen.
 st.markdown(
     """
     <style>
-      .stButton > button {
-          border-radius: 10px;
-          padding: 0.55rem 1.1rem;
-          font-weight: 600;
-          border: 1px solid rgba(232, 163, 61, 0.35);
+      /* ---------- Typografie ---------- */
+      html, body, [class*="css"] { line-height: 1.6; }
+      h1 { font-size: 2.1rem !important; font-weight: 700; letter-spacing: -0.02em; }
+      h2 { font-size: 1.5rem !important; font-weight: 650; }
+      h3 { font-size: 1.2rem !important; letter-spacing: 0.2px; }
+      p, label, .stMarkdown { font-size: 1.0rem; }
+
+      /* ---------- Seite: sanftes Einblenden, mehr Luft ---------- */
+      @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
       }
-      .stButton > button:hover { border-color: #e8a33d; }
-      .stTextArea textarea, .stTextInput input { border-radius: 10px; }
-      div[data-testid="stAlert"] { border-radius: 12px; }
-      .stProgress > div > div > div { background-color: #e8a33d; }
-      h3 { letter-spacing: 0.2px; }
+      section.main .block-container {
+          animation: fadeInUp 0.35s ease-out;
+          padding-top: 2.5rem;
+          padding-bottom: 3rem;
+          max-width: 46rem;
+      }
+
+      /* ---------- Header ---------- */
+      .app-header {
+          display: flex; align-items: center; gap: 14px;
+          padding: 1.4rem 0 0.4rem 0;
+      }
+      .app-logo {
+          width: 46px; height: 46px; border-radius: 12px; flex: 0 0 46px;
+          background: linear-gradient(135deg, #6366F1, #8B5CF6);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 22px; box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+      }
+      .app-title { font-size: 1.65rem; font-weight: 700; letter-spacing: -0.02em;
+                   color: #E6E9F2; margin: 0; }
+      .app-subtitle { color: #98A2B8; font-size: 0.98rem; margin: 0.15rem 0 1.6rem 60px; }
+
+      /* ---------- Karten / Formulare ---------- */
+      div[data-testid="stForm"] {
+          background: #161C2D;
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 14px;
+          padding: 1.6rem 1.6rem 1.2rem 1.6rem;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      }
+      div[data-testid="stAlert"] {
+          border-radius: 12px;
+          padding: 0.9rem 1.1rem;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      div[data-testid="stVerticalBlock"] > div { margin-bottom: 0.25rem; }
+
+      /* ---------- Eingaben ---------- */
+      .stTextArea textarea, .stTextInput input {
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.08) !important;
+          font-size: 1.0rem; line-height: 1.6;
+      }
+      .stTextArea textarea:focus, .stTextInput input:focus {
+          border-color: #6366F1 !important;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+      }
+
+      /* ---------- Buttons ---------- */
+      .stButton > button, .stFormSubmitButton > button {
+          border-radius: 11px;
+          padding: 0.6rem 1.2rem;
+          font-weight: 600;
+          border: 1px solid rgba(99, 102, 241, 0.35);
+          transition: transform 0.15s ease, border-color 0.15s ease,
+                      box-shadow 0.15s ease;
+      }
+      .stButton > button:hover, .stFormSubmitButton > button:hover {
+          transform: scale(1.02);
+          border-color: #6366F1;
+          box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+      }
+      .stButton > button:active { transform: scale(0.99); }
+
+      /* ---------- Progressbar ---------- */
+      .stProgress > div > div {
+          height: 10px !important; border-radius: 999px;
+      }
+      .stProgress > div > div > div {
+          height: 10px !important; border-radius: 999px;
+          background: linear-gradient(90deg, #6366F1, #8B5CF6) !important;
+      }
+
+      /* ---------- Lade-Animation (Spinner-Puls) ---------- */
+      @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+      div[data-testid="stSpinner"] > div {
+          animation: pulse 1.4s ease-in-out infinite;
+          font-size: 1.02rem;
+      }
     </style>
     """,
     unsafe_allow_html=True,
@@ -44,7 +124,7 @@ st.markdown(
 def erzeuge_antwort(betrieb: str, text: str, sterne: int):
     """Erzeugt eine Antwort via Gemini. Gibt (antwort, fehlermeldung) zurück."""
     try:
-        with st.spinner("Ihre Antwort wird erstellt …"):
+        with st.spinner("✨ KI erstellt gerade eine natürliche Antwort..."):
             ergebnis = agent.antwort_erzeugen(betrieb, text, sterne)
         return ergebnis["entwurf"], None
     except agent.TageslimitErreicht as fehler:
@@ -139,7 +219,7 @@ if ansicht == "Entwickler":
                     key=f"training_{i}_{st.session_state.gen}",
                 )
                 s1, s2, s3 = st.columns(3)
-                if s1.button("✅ Freigeben", type="primary", key="tr_ok"):
+                if s1.button("✔ Freigeben", type="primary", key="tr_ok"):
                     protokoll.speichere(
                         bewertung["betrieb"], bewertung["sterne"], bewertung["text"],
                         st.session_state.entwurf, finale,
@@ -158,7 +238,7 @@ if ansicht == "Entwickler":
                         st.session_state.entwurf = antwort
                         st.session_state.gen += 1
                         st.rerun()
-                if s3.button("⏭️ Weiter", key="tr_skip"):
+                if s3.button("➜ Weiter", key="tr_skip"):
                     st.session_state.index += 1
                     st.session_state.entwurf_fuer = -1
                     st.session_state.fehler_fuer = -1
@@ -212,6 +292,17 @@ if ansicht == "Entwickler":
 
 # ================================================================== KUNDE
 # Schlicht: eigene Bewertung einfügen -> fertige Antwort. Keine Testdaten, keine Technik.
+st.markdown(
+    """
+    <div class="app-header">
+      <div class="app-logo">💬</div>
+      <p class="app-title">Bewertungs-Antwort</p>
+    </div>
+    <p class="app-subtitle">KI erstellt professionelle Antworten auf Google-Bewertungen in Sekunden.</p>
+    """,
+    unsafe_allow_html=True,
+)
+
 if st.session_state.kunde_fertig:
     st.success("✅ Antwort übernommen — einfach bei Google einfügen. Die nächste Bewertung kann kommen!")
     st.session_state.kunde_fertig = False
@@ -253,7 +344,7 @@ else:
     )
 
     k1, k2, k3 = st.columns(3)
-    if k1.button("✅ Antwort übernehmen", type="primary"):
+    if k1.button("✔ Antwort übernehmen", type="primary"):
         protokoll.speichere(betrieb, sterne, text, st.session_state.kunde_antwort, finale_antwort)
         st.session_state.kunde_antwort = ""
         st.session_state.kunde_daten = None
@@ -267,7 +358,7 @@ else:
             st.session_state.kunde_antwort = antwort
             st.session_state.kunde_gen += 1
             st.rerun()
-    if k3.button("↩️ Neue Bewertung"):
+    if k3.button("➜ Neue Bewertung"):
         st.session_state.kunde_antwort = ""
         st.session_state.kunde_daten = None
         st.rerun()
