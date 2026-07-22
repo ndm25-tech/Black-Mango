@@ -57,4 +57,17 @@ window.KUDORA_SELECTORS = {
     'button[aria-label*="Reply"]',
     'button[jsaction*="reply"]',
   ],
+  // "Antworten"-Knopf/Link, den nur der Inhaber sieht (öffnet das Antwortfeld).
+  // Dient als Signal "hier kann man antworten" — nur DANN zeigt Kudora sich.
+  replyTrigger: [
+    "[data-kudora-reply-trigger]",
+    'button[aria-label*="Antworten"]',
+    'button[aria-label*="antworten"]',
+    'button[aria-label*="Reply"]',
+    'button[aria-label*="reply"]',
+    'a[aria-label*="Antworten"]',
+  ],
+  // Vorhandene Inhaber-Antwort (dann ist die Bewertung schon beantwortet ->
+  // Kudora zeigt sich NICHT). Zusätzlich wird im Code auf den Text geprüft.
+  ownerReply: ["[data-kudora-owner-reply]"],
 };

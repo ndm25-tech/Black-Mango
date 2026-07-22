@@ -61,9 +61,13 @@ jeder Google-Bewertung **einen** Knopf **„✨ Mit Kudora antworten"** ein. Gib
 ein Google-Antwortfeld (z. B. business.google.com), schreibt Kudora direkt hinein;
 sonst (z. B. Google Maps) erscheint die Antwort **direkt unter der Bewertung** zum
 Bearbeiten und Kopieren. Der Wirt prüft und sendet **selbst** (assistierend, kein
-Auto-Post). Beim Kopieren lernt Kudora **automatisch** den Stil — ohne Extra-Knopf.
-Ein dezenter Prüf-Hinweis erscheint **nur** bei heiklen Bewertungen (≤ 3 Sterne
-oder riskante Wörter), nicht bei guten.
+Auto-Post). Beim Senden lernt Kudora **automatisch** den Stil — auch aus geänderten
+Antworten. Ein dezenter Prüf-Hinweis erscheint **nur** bei heiklen Bewertungen
+(≤ 3 Sterne oder riskante Wörter), nicht bei guten.
+
+Kudora zeigt sich **nur** dort, wo man wirklich antworten kann (eigenes
+Unternehmensprofil), und **nur bei noch unbeantworteten** Bewertungen — bereits
+beantwortete und fremde/öffentliche Seiten bleiben unberührt.
 
 **So testest du es (ein Befehl + Erweiterung laden):**
 
