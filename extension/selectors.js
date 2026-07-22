@@ -45,4 +45,16 @@ window.KUDORA_SELECTORS = {
     'textarea[aria-label*="reply"]',
     'textarea[aria-label*="Reply"]',
   ],
+  // Googles eigener "Senden/Posten"-Knopf der Antwort (nur im Inhaber-Profil da).
+  // Bewusst innerhalb der Karte gesucht, damit kein fremder Knopf getroffen wird.
+  send: [
+    "[data-kudora-send]",
+    'button[aria-label*="Antwort senden"]',
+    'button[aria-label*="Antwort posten"]',
+    'button[aria-label*="Antwort veröffentlichen"]',
+    'button[aria-label*="Senden"]',
+    'button[aria-label*="Posten"]',
+    'button[aria-label*="Reply"]',
+    'button[jsaction*="reply"]',
+  ],
 };

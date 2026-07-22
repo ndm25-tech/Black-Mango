@@ -162,11 +162,10 @@
     if (h) h.remove();
   }
 
-  /* Zeigt die Antwort DIREKT unter der Bewertung (gleiche Seite wie der Text),
-   * wenn Google kein eigenes Antwortfeld anbietet (z. B. auf Google Maps).
-   * Bearbeitbar; "Antwort kopieren" legt sie in die Zwischenablage — und Kudora
-   * lernt dabei still den Stil (kein extra Knopf, kein "Merken"-Fachwort). */
-  function zeigeInlineAntwort(leiste, text, ctx) {
+  /* Zeigt ein EDITIERBARES Antwortfeld direkt unter der Bewertung, wenn Google
+   * selbst keins anbietet (z. B. fremde Betriebe / Google Maps). Der Nutzer kann
+   * den Text ändern. Senden ist hier nicht möglich (dazu unten der Hinweis). */
+  function zeigeInlineAntwort(leiste, text) {
     let box =
       leiste.nextElementSibling &&
       leiste.nextElementSibling.classList.contains("kudora-antwortbox")
@@ -178,40 +177,95 @@
       const ta = document.createElement("textarea");
       ta.className = "kudora-antwort-text";
       ta.rows = 4;
-      const copy = document.createElement("button");
-      copy.type = "button";
-      copy.className = "kudora-copy";
-      copy.textContent = "Antwort kopieren";
-      copy.addEventListener("click", async () => {
-        const wert = ta.value;
-        if (navigator.clipboard) {
-          try {
-            await navigator.clipboard.writeText(wert);
-          } catch (_) {
-            /* Zwischenablage evtl. blockiert -> Text bleibt trotzdem markierbar */
-          }
-        }
-        copy.textContent = "✓ Kopiert";
-        setTimeout(() => (copy.textContent = "Antwort kopieren"), 1500);
-        // Still & unsichtbar lernen: die tatsächlich genutzte Antwort speichern.
-        const c = box._ctx || {};
-        sendeFreigabe({
-          original: c.original || "",
-          sterne: c.sterne || 5,
-          betrieb: "",
-          entwurf: c.entwurf || "",
-          finale_antwort: wert,
-        });
-      });
       box.appendChild(ta);
-      box.appendChild(copy);
       leiste.insertAdjacentElement("afterend", box);
     }
-    box._ctx = ctx;
-    box.querySelector(".kudora-antwort-text").value = text;
+    const ta = box.querySelector(".kudora-antwort-text");
+    ta.value = text;
+    return ta;
+  }
+
+  function zeigeSendeHinweis(karte) {
+    if (karte.querySelector(".kudora-sende-hinweis")) return;
+    const h = document.createElement("div");
+    h.className = "kudora-sende-hinweis";
+    h.textContent =
+      "Direktes Senden geht nur in Ihrem eigenen Unternehmensprofil " +
+      "(business.google.com, mit dem verwaltenden Konto). Hier können Sie die " +
+      "Antwort nur ansehen und anpassen.";
+    karte.appendChild(h);
+  }
+
+  function entferneSendeHinweis(karte) {
+    const h = karte.querySelector(".kudora-sende-hinweis");
+    if (h) h.remove();
+  }
+
+  /* Aktuelle (evtl. vom Nutzer geänderte) Antwort aus Google-Feld oder Inline-Box. */
+  function aktuelleAntwort(ctx) {
+    if (ctx.feld) return ctx.feld.value;
+    if (ctx.box) return ctx.box.value;
+    return ctx.entwurf;
+  }
+
+  /* "✓ Senden": lernt aus der finalen Antwort (auch wenn geändert) und klickt
+   * Googles eigenen Senden-Knopf. Findet Kudora den nicht, fügt es die Antwort
+   * ein und bittet, Googles Knopf selbst zu klicken. */
+  async function aufSenden(ctx, sendBtn) {
+    const finale = (aktuelleAntwort(ctx) || "").trim();
+    if (!finale) return;
+    // Lernen: JEDE gesendete Antwort (auch geänderte) macht Kudora besser.
+    sendeFreigabe({
+      original: ctx.original,
+      sterne: ctx.sterne,
+      betrieb: "",
+      entwurf: ctx.entwurf,
+      finale_antwort: finale,
+    });
+    const googleSenden = firstMatch(ctx.karte, S.send);
+    if (ctx.feld && googleSenden) {
+      setzeFeldwert(ctx.feld, finale);
+      googleSenden.click();
+      sendBtn.disabled = true;
+      sendBtn.textContent = "✓ Gesendet";
+    } else {
+      // Konnte Googles Senden-Knopf nicht sicher finden -> Nutzer klickt selbst.
+      if (ctx.feld) {
+        setzeFeldwert(ctx.feld, finale);
+        ctx.feld.focus();
+      }
+      sendBtn.textContent = "Jetzt in Google senden";
+      sendBtn.title =
+        "Kudora hat die Antwort eingefügt und daraus gelernt. Bitte klicken Sie " +
+        "nun Googles eigenen Senden-Knopf.";
+    }
+  }
+
+  /* Baut/aktualisiert den "Senden"-Knopf in der Leiste — nur wenn ein echtes
+   * Google-Antwortfeld existiert (sonst kann man nicht senden). */
+  function aktualisiereSendenKnopf(leiste, ctx) {
+    let sendBtn = leiste.querySelector(".kudora-senden");
+    if (ctx.feld) {
+      entferneSendeHinweis(ctx.karte);
+      if (!sendBtn) {
+        sendBtn = document.createElement("button");
+        sendBtn.type = "button";
+        sendBtn.className = "kudora-senden";
+        sendBtn.addEventListener("click", () => aufSenden(sendBtn._ctx, sendBtn));
+        leiste.appendChild(sendBtn);
+      }
+      sendBtn.disabled = false;
+      sendBtn.textContent = "✓ Senden";
+      sendBtn._ctx = ctx;
+    } else {
+      // Kein Antwortfeld (fremdes Profil / Maps) -> kein Senden möglich.
+      if (sendBtn) sendBtn.remove();
+      zeigeSendeHinweis(ctx.karte);
+    }
   }
 
   async function aufGenerieren(karte, btn) {
+    const leiste = btn.parentNode;
     const original = leseText(karte);
     if (!original) {
       knopfStatus(btn, "fehler", "Kein Bewertungstext gefunden.");
@@ -225,27 +279,26 @@
       return;
     }
     const entwurf = (res.entwurf || "").trim();
-    const ctx = { original, sterne, entwurf };
 
-    // Wenn diese Bewertung ein echtes Antwortfeld hat (z. B. business.google.com),
-    // dort hineinschreiben; sonst die Antwort direkt unter der Bewertung zeigen.
-    // WICHTIG: nur ein Feld INNERHALB der Karte nutzen — sonst landet die Antwort
-    // versehentlich im Feld einer anderen Bewertung.
+    // Wenn diese Bewertung ein echtes Antwortfeld hat (eigenes Profil), dort
+    // hineinschreiben (editierbar); sonst ein editierbares Feld unter die
+    // Bewertung setzen. WICHTIG: nur ein Feld INNERHALB der Karte nutzen.
     const feld = firstMatch(karte, S.reply);
+    let box = null;
     if (feld) {
       setzeFeldwert(feld, entwurf);
       feld.focus();
     } else {
-      zeigeInlineAntwort(btn.parentNode, entwurf, ctx);
+      box = zeigeInlineAntwort(leiste, entwurf);
     }
 
-    // Hinweis NUR bei wirklich heiklen Fällen: schlechte (≤3 Sterne) ODER riskante
-    // Bewertungen — nicht mehr bei jeder (gute 4–5-Sterne-Antworten bleiben ruhig).
+    // Hinweis NUR bei heiklen Fällen: schlechte (≤3 Sterne) ODER riskante.
     const heikel = (res.risikowoerter && res.risikowoerter.length > 0) || sterne <= 3;
     if (heikel) zeigeHinweis(karte);
     else entferneHinweis(karte);
 
-    knopfStatus(btn, "fertig");
+    knopfStatus(btn, "fertig"); // Knopf wird zu "↻ Neue Formulierung"
+    aktualisiereSendenKnopf(leiste, { karte, original, sterne, entwurf, feld, box });
   }
 
   function injiziereKnopf(karte) {
