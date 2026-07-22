@@ -1,4 +1,4 @@
-# Bewertungs-Antwort-Agent 💬
+# Kudora 💬
 
 Ein KI-Agent, der auf Google-Bewertungen von Betrieben passende, **deutsche**
 Antworten entwirft. In der Lernphase geht **jede** Antwort zuerst zur
