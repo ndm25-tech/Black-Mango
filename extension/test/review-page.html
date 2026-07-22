@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <title>Kudora – Test: nachgebaute Google-Bewertungsseite</title>
+    <style>
+      body {
+        font-family: Roboto, Arial, sans-serif;
+        background: #f8f9fa;
+        color: #202124;
+        max-width: 720px;
+        margin: 24px auto;
+        padding: 0 16px;
+      }
+      h1 {
+        font-size: 18px;
+        color: #5f6368;
+      }
+      .hinweis {
+        font-size: 13px;
+        color: #5f6368;
+        background: #fff;
+        border: 1px solid #dadce0;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 16px;
+      }
+      [data-kudora-review] {
+        background: #fff;
+        border: 1px solid #dadce0;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .autor {
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+      .sterne {
+        color: #fbbc04;
+        font-size: 15px;
+        margin-bottom: 6px;
+      }
+      [data-kudora-text] {
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .antwort-label {
+        margin-top: 12px;
+        font-size: 12px;
+        color: #5f6368;
+      }
+      textarea[data-kudora-reply] {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 4px;
+        border: 1px solid #dadce0;
+        border-radius: 8px;
+        padding: 8px;
+        font-size: 14px;
+        min-height: 60px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Nachgebaute Google-Bewertungsseite (nur zum Testen der Erweiterung)</h1>
+    <div class="hinweis">
+      Diese Seite ahmt zwei Google-Bewertungs-Karten nach (mit
+      <code>data-kudora-*</code>-Ankern). Sie dient nur der Prüfung, dass der
+      Kudora-Knopf erscheint, Text + Sterne liest und das Antwortfeld füllt. Die
+      echten Google-Anker bestätigt man später eingeloggt.
+    </div>
+
+    <!-- Karte 1: Lob (5 Sterne) -->
+    <div data-kudora-review>
+      <div class="autor">Maria S.</div>
+      <div class="sterne" data-kudora-stars data-kudora-stars-value="5" aria-label="5 von 5 Sternen">★★★★★</div>
+      <div data-kudora-text>
+        Wirklich tolles Essen und sehr freundlicher Service. Die Pasta war
+        fantastisch, wir kommen gerne wieder!
+      </div>
+      <div class="antwort-label">Öffentlich antworten</div>
+      <textarea data-kudora-reply aria-label="Antwort schreiben" placeholder="Ihre Antwort …"></textarea>
+    </div>
+
+    <!-- Karte 2: Kritik (2 Sterne) -->
+    <div data-kudora-review>
+      <div class="autor">Thomas K.</div>
+      <div class="sterne" data-kudora-stars data-kudora-stars-value="2" aria-label="2 von 5 Sternen">★★☆☆☆</div>
+      <div data-kudora-text>
+        Wir mussten über 40 Minuten auf das Essen warten und der Tisch war nicht
+        richtig sauber. Schade, das Ambiente ist eigentlich schön.
+      </div>
+      <div class="antwort-label">Öffentlich antworten</div>
+      <textarea data-kudora-reply aria-label="Antwort schreiben" placeholder="Ihre Antwort …"></textarea>
+    </div>
+
+    <!-- Test-Weiche: statt echtem Backend eine feste Antwort liefern.
+         MUSS vor content.js gesetzt werden. -->
+    <script>
+      window.__KUDORA_GENERATE__ = function (payload) {
+        const positiv = payload.sterne >= 4;
+        return {
+          ok: true,
+          entwurf: positiv
+            ? "Ganz herzlichen Dank für Ihre lieben Worte! Es freut uns riesig, dass Ihnen die Pasta und der Service gefallen haben. Wir freuen uns schon auf Ihren nächsten Besuch."
+            : "Es tut uns aufrichtig leid, dass die Wartezeit und die Sauberkeit nicht gepasst haben. Das entspricht nicht unserem Anspruch, und wir kümmern uns darum. Bitte geben Sie uns gern eine zweite Chance.",
+          freigabe_noetig: !positiv,
+          risikowoerter: [],
+        };
+      };
+      // Test-Weiche fürs Lernen: merkt sich die letzte Freigabe im Fenster.
+      window.__KUDORA_FREIGABE__ = function (payload) {
+        window.__LETZTE_FREIGABE__ = payload;
+        return { ok: true, gespeichert: payload };
+      };
+    </script>
+    <script src="../selectors.js"></script>
+    <script src="../content.js"></script>
+  </body>
+</html>

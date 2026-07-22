@@ -3,3 +3,5 @@ langchain>=0.3
 langchain-google-genai>=2.0
 python-dotenv>=1.0
 streamlit>=1.30      # Oberfläche (Woche 4): streamlit run app.py
+fastapi>=0.110       # Backend-API für die Chrome-Erweiterung (api.py)
+uvicorn>=0.29        # ASGI-Server: uvicorn api:app --port 8000
