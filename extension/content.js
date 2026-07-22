@@ -102,49 +102,74 @@
 
   /* ---------- Backend-Aufruf (mit Test-Weiche) ---------- */
 
-  function holeAntwort(payload) {
-    if (typeof window.__KUDORA_GENERATE__ === "function") {
-      return Promise.resolve(window.__KUDORA_GENERATE__(payload));
+  /* Ist die Verbindung zur Erweiterung noch gültig? Nach einem Erweiterungs-
+   * Neuladen (↻) verliert ein bereits offenes Tab den Kontext ("Extension
+   * context invalidated"). Dann NICHT senden, sondern sauber melden. */
+  function kontextGueltig() {
+    try {
+      return !!(typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id);
+    } catch (_) {
+      return false;
     }
-    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
-      return new Promise((resolve) => {
-        chrome.runtime.sendMessage(
-          { type: "kudora-fetch", path: "/api/antwort", body: payload },
-          (resp) => {
-            if (resp && resp.ok) resolve(resp.data);
-            else
-              resolve({
-                ok: false,
-                fehler: "netzwerk",
-                meldung:
-                  (resp && resp.error) ||
-                  "Keine Verbindung zum Kudora-Server. Läuft das Backend?",
-              });
+  }
+
+  /* Sichere Nachricht an den Hintergrund — wirft nie, meldet Fehler als Objekt. */
+  function sendeNachricht(msg) {
+    return new Promise((resolve) => {
+      if (!kontextGueltig()) {
+        resolve({
+          ok: false,
+          error:
+            "Erweiterung wurde neu geladen — bitte diese Google-Seite einmal neu " +
+            "laden (Cmd+R).",
+        });
+        return;
+      }
+      try {
+        chrome.runtime.sendMessage(msg, (resp) => {
+          const err = chrome.runtime && chrome.runtime.lastError;
+          if (err) {
+            resolve({ ok: false, error: err.message });
+            return;
           }
-        );
-      });
-    }
-    return Promise.resolve({
-      ok: false,
-      fehler: "nicht_verfuegbar",
-      meldung: "Kudora-Hintergrund nicht verfügbar.",
+          resolve(resp || { ok: false, error: "Keine Antwort vom Hintergrund." });
+        });
+      } catch (e) {
+        resolve({ ok: false, error: String(e) });
+      }
     });
   }
 
+  async function holeAntwort(payload) {
+    if (typeof window.__KUDORA_GENERATE__ === "function") {
+      return window.__KUDORA_GENERATE__(payload);
+    }
+    const resp = await sendeNachricht({
+      type: "kudora-fetch",
+      path: "/api/antwort",
+      body: payload,
+    });
+    if (resp && resp.ok) return resp.data;
+    return {
+      ok: false,
+      fehler: "netzwerk",
+      meldung:
+        (resp && resp.error) ||
+        "Keine Verbindung zum Kudora-Server. Läuft das Backend?",
+    };
+  }
+
   /* Speichert die finale Antwort -> Kudora lernt den Stil fürs nächste Mal. */
-  function sendeFreigabe(payload) {
+  async function sendeFreigabe(payload) {
     if (typeof window.__KUDORA_FREIGABE__ === "function") {
-      return Promise.resolve(window.__KUDORA_FREIGABE__(payload));
+      return window.__KUDORA_FREIGABE__(payload);
     }
-    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
-      return new Promise((resolve) => {
-        chrome.runtime.sendMessage(
-          { type: "kudora-fetch", path: "/api/freigabe", body: payload },
-          (resp) => resolve(resp && resp.ok ? resp.data : { ok: false })
-        );
-      });
-    }
-    return Promise.resolve({ ok: false });
+    const resp = await sendeNachricht({
+      type: "kudora-fetch",
+      path: "/api/freigabe",
+      body: payload,
+    });
+    return resp && resp.ok ? resp.data : { ok: false };
   }
 
   /* ---------- UI ---------- */
@@ -350,7 +375,12 @@
     btn.type = "button";
     btn.className = "kudora-btn";
     btn.textContent = "✨ Mit Kudora antworten";
-    btn.addEventListener("click", () => aufGenerieren(karte, btn));
+    btn.addEventListener("click", () => {
+      // Niemals einen unbehandelten Fehler in die Konsole/Chrome werfen.
+      Promise.resolve()
+        .then(() => aufGenerieren(karte, btn))
+        .catch((e) => knopfStatus(btn, "fehler", String(e)));
+    });
     leiste.appendChild(btn);
     karte.appendChild(leiste);
   }
@@ -358,7 +388,17 @@
   /* ---------- Scannen (auch bei nachgeladenen Bewertungen) ---------- */
 
   function scanne() {
-    alleKarten().forEach(injiziereKnopf);
+    try {
+      alleKarten().forEach((karte) => {
+        try {
+          injiziereKnopf(karte);
+        } catch (_) {
+          /* eine kaputte Karte darf den Rest nicht stoppen */
+        }
+      });
+    } catch (_) {
+      /* Scan-Fehler schlucken -> nie roter Erweiterungs-Fehler */
+    }
   }
 
   function debounce(fn, ms) {
