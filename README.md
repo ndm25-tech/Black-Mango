@@ -57,10 +57,13 @@ streamlit run app.py
 ## 🧩 Chrome-Erweiterung (Kudora direkt auf der Google-Bewertungsseite)
 
 Damit Kudora **dort** hilft, wo der Wirt arbeitet: Die Erweiterung blendet neben
-jeder Google-Bewertung einen Knopf **„✨ Mit Kudora antworten"** ein → füllt das
-Google-Antwortfeld → der Wirt prüft und klickt **selbst** „Senden" (assistierend,
-kein Auto-Post). „✓ Übernehmen & merken" speichert die finale Antwort, damit Kudora
-den Stil lernt.
+jeder Google-Bewertung **einen** Knopf **„✨ Mit Kudora antworten"** ein. Gibt es
+ein Google-Antwortfeld (z. B. business.google.com), schreibt Kudora direkt hinein;
+sonst (z. B. Google Maps) erscheint die Antwort **direkt unter der Bewertung** zum
+Bearbeiten und Kopieren. Der Wirt prüft und sendet **selbst** (assistierend, kein
+Auto-Post). Beim Kopieren lernt Kudora **automatisch** den Stil — ohne Extra-Knopf.
+Ein dezenter Prüf-Hinweis erscheint **nur** bei heiklen Bewertungen (≤ 3 Sterne
+oder riskante Wörter), nicht bei guten.
 
 **So testest du es (ein Befehl + Erweiterung laden):**
 
@@ -85,10 +88,14 @@ Danach die Erweiterung laden:
 > ⚠️ **Ehrlicher Hinweis:** Googles Bewertungsseite hat keine öffentliche, stabile
 > HTML-Struktur. Falls der Knopf nicht erscheint oder das falsche Feld füllt, müssen
 > nur die Selektoren in `extension/selectors.js` angepasst werden (eingeloggt einmal
-> bestätigen). Zur Sicherheit gibt es ein Fallback-Panel mit „In Zwischenablage".
+> bestätigen).
+>
+> **Nur Desktop-Chrome/Edge** — Chrome-Erweiterungen laufen nicht auf dem Handy
+> (Android/iOS). Für mobil kommt später Stufe 2 (Google-API, siehe
+> `docs/google-api-antrag.md`) oder man nutzt die Kudora-Web-App im Handy-Browser.
 >
 > Ohne Chrome kann man die Mechanik über `extension/test/review-page.html` prüfen
-> (nachgebaute Bewertungskarten). Nur Desktop-Chrome/Edge.
+> (nachgebaute Bewertungskarten).
 
 **Stufe 2 (später):** direkter Post nach Google via Business-Profile-API — die
 Freigabe dafür muss bei Google beantragt werden. Vorbereitung + fertiger

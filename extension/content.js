@@ -157,31 +157,58 @@
     karte.appendChild(h);
   }
 
-  /* Fallback, falls kein Antwortfeld gefunden wird: schwebendes Panel. */
-  function zeigePanel(text) {
-    let panel = document.getElementById("kudora-panel");
-    if (!panel) {
-      panel = document.createElement("div");
-      panel.id = "kudora-panel";
-      panel.innerHTML =
-        '<div class="kudora-panel-kopf">Kudora-Antwort' +
-        '<span class="kudora-panel-zu">✕</span></div>' +
-        '<textarea class="kudora-panel-text" rows="5"></textarea>' +
-        '<button class="kudora-panel-copy" type="button">In Zwischenablage</button>';
-      document.body.appendChild(panel);
-      panel.querySelector(".kudora-panel-zu").addEventListener("click", () => {
-        panel.style.display = "none";
+  function entferneHinweis(karte) {
+    const h = karte.querySelector(".kudora-hinweis");
+    if (h) h.remove();
+  }
+
+  /* Zeigt die Antwort DIREKT unter der Bewertung (gleiche Seite wie der Text),
+   * wenn Google kein eigenes Antwortfeld anbietet (z. B. auf Google Maps).
+   * Bearbeitbar; "Antwort kopieren" legt sie in die Zwischenablage — und Kudora
+   * lernt dabei still den Stil (kein extra Knopf, kein "Merken"-Fachwort). */
+  function zeigeInlineAntwort(leiste, text, ctx) {
+    let box =
+      leiste.nextElementSibling &&
+      leiste.nextElementSibling.classList.contains("kudora-antwortbox")
+        ? leiste.nextElementSibling
+        : null;
+    if (!box) {
+      box = document.createElement("div");
+      box.className = "kudora-antwortbox";
+      const ta = document.createElement("textarea");
+      ta.className = "kudora-antwort-text";
+      ta.rows = 4;
+      const copy = document.createElement("button");
+      copy.type = "button";
+      copy.className = "kudora-copy";
+      copy.textContent = "Antwort kopieren";
+      copy.addEventListener("click", async () => {
+        const wert = ta.value;
+        if (navigator.clipboard) {
+          try {
+            await navigator.clipboard.writeText(wert);
+          } catch (_) {
+            /* Zwischenablage evtl. blockiert -> Text bleibt trotzdem markierbar */
+          }
+        }
+        copy.textContent = "✓ Kopiert";
+        setTimeout(() => (copy.textContent = "Antwort kopieren"), 1500);
+        // Still & unsichtbar lernen: die tatsächlich genutzte Antwort speichern.
+        const c = box._ctx || {};
+        sendeFreigabe({
+          original: c.original || "",
+          sterne: c.sterne || 5,
+          betrieb: "",
+          entwurf: c.entwurf || "",
+          finale_antwort: wert,
+        });
       });
-      panel.querySelector(".kudora-panel-copy").addEventListener("click", () => {
-        const t = panel.querySelector(".kudora-panel-text").value;
-        if (navigator.clipboard) navigator.clipboard.writeText(t);
-        const b = panel.querySelector(".kudora-panel-copy");
-        b.textContent = "✓ Kopiert";
-        setTimeout(() => (b.textContent = "In Zwischenablage"), 1500);
-      });
+      box.appendChild(ta);
+      box.appendChild(copy);
+      leiste.insertAdjacentElement("afterend", box);
     }
-    panel.style.display = "block";
-    panel.querySelector(".kudora-panel-text").value = text;
+    box._ctx = ctx;
+    box.querySelector(".kudora-antwort-text").value = text;
   }
 
   async function aufGenerieren(karte, btn) {
@@ -190,63 +217,44 @@
       knopfStatus(btn, "fehler", "Kein Bewertungstext gefunden.");
       return;
     }
+    const sterne = leseSterne(karte);
     knopfStatus(btn, "laden");
-    const res = await holeAntwort({ original, sterne: leseSterne(karte), betrieb: "" });
+    const res = await holeAntwort({ original, sterne, betrieb: "" });
     if (!res || res.ok === false) {
       knopfStatus(btn, "fehler", (res && res.meldung) || "Fehler.");
       return;
     }
     const entwurf = (res.entwurf || "").trim();
-    const feld = firstMatch(karte, S.reply) || firstMatch(document, S.reply);
+    const ctx = { original, sterne, entwurf };
+
+    // Wenn diese Bewertung ein echtes Antwortfeld hat (z. B. business.google.com),
+    // dort hineinschreiben; sonst die Antwort direkt unter der Bewertung zeigen.
+    // WICHTIG: nur ein Feld INNERHALB der Karte nutzen — sonst landet die Antwort
+    // versehentlich im Feld einer anderen Bewertung.
+    const feld = firstMatch(karte, S.reply);
     if (feld) {
       setzeFeldwert(feld, entwurf);
       feld.focus();
     } else {
-      zeigePanel(entwurf);
+      zeigeInlineAntwort(btn.parentNode, entwurf, ctx);
     }
-    if (res.freigabe_noetig || (res.risikowoerter && res.risikowoerter.length)) {
-      zeigeHinweis(karte);
-    }
-    knopfStatus(btn, "fertig");
-    fuegeMerkenKnopf(btn.parentNode, {
-      original,
-      sterne: leseSterne(karte),
-      entwurf,
-      feld,
-    });
-  }
 
-  /* "Übernehmen & merken": speichert die (evtl. angepasste) finale Antwort,
-   * damit Kudora den Stil des Betriebs lernt. Der Wirt sendet danach wie gewohnt
-   * selbst über Googles eigenen Senden-Knopf. */
-  function fuegeMerkenKnopf(leiste, ctx) {
-    if (!leiste || leiste.querySelector(".kudora-merken")) return;
-    const m = document.createElement("button");
-    m.type = "button";
-    m.className = "kudora-merken";
-    m.textContent = "✓ Übernehmen & merken";
-    m.title = "Speichert Ihre finale Antwort, damit Kudora Ihren Stil lernt.";
-    m.addEventListener("click", async () => {
-      const finale = ctx.feld ? ctx.feld.value : ctx.entwurf;
-      m.disabled = true;
-      m.textContent = "… speichert";
-      const res = await sendeFreigabe({
-        original: ctx.original,
-        sterne: ctx.sterne,
-        betrieb: "",
-        entwurf: ctx.entwurf,
-        finale_antwort: finale,
-      });
-      m.textContent = res && res.ok ? "✓ Gemerkt" : "⚠ Fehler";
-      setTimeout(() => {
-        m.disabled = false;
-      }, 1400);
-    });
-    leiste.appendChild(m);
+    // Hinweis NUR bei wirklich heiklen Fällen: schlechte (≤3 Sterne) ODER riskante
+    // Bewertungen — nicht mehr bei jeder (gute 4–5-Sterne-Antworten bleiben ruhig).
+    const heikel = (res.risikowoerter && res.risikowoerter.length > 0) || sterne <= 3;
+    if (heikel) zeigeHinweis(karte);
+    else entferneHinweis(karte);
+
+    knopfStatus(btn, "fertig");
   }
 
   function injiziereKnopf(karte) {
     if (karte.getAttribute(MARK)) return;
+    // Dopplung vermeiden: verschachtelte Karten (Google-Layout matcht mehrere
+    // Ebenen) sollen nur EINEN Knopf bekommen.
+    if (karte.querySelector(".kudora-bar")) return; // ein Nachfahre hat schon einen
+    if (karte.parentElement && karte.parentElement.closest("[" + MARK + "]")) return;
+
     karte.setAttribute(MARK, "1");
     const leiste = document.createElement("div");
     leiste.className = "kudora-bar";
