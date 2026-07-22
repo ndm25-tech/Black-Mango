@@ -34,13 +34,15 @@ window.KUDORA_SELECTORS = {
     'g-review-stars span',
     ".kvMYJc",
   ],
-  // Das Antwortfeld des Betriebs.
+  // Das Antwortfeld des Betriebs (z. B. business.google.com). Bewusst nur
+  // SPEZIFISCHE Felder — kein blankes "textarea", sonst würde auf Google Maps
+  // ein fremdes Feld getroffen. Findet sich keins, zeigt Kudora die Antwort
+  // direkt unter der Bewertung an.
   reply: [
     "[data-kudora-reply]",
     'textarea[aria-label*="Antwort"]',
     'textarea[aria-label*="antworten"]',
     'textarea[aria-label*="reply"]',
     'textarea[aria-label*="Reply"]',
-    "textarea",
   ],
 };

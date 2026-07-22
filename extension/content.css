@@ -37,24 +37,39 @@
   background: linear-gradient(135deg, #4f46e5, #6366f1);
 }
 
-.kudora-merken {
+/* Antwort direkt unter der Bewertung (gleiche Seite wie der Text) */
+.kudora-antwortbox {
+  margin: 6px 0 4px 0;
+}
+.kudora-antwort-text {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #202124;
+  background: #ffffff;
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  padding: 10px;
+  resize: vertical;
+  min-height: 84px;
+}
+.kudora-copy {
+  margin-top: 6px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   font-weight: 600;
-  color: #4f46e5;
-  background: #eef2ff;
-  border: 1px solid #c7d2fe;
+  color: #ffffff;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
   border-radius: 8px;
   padding: 7px 14px;
   cursor: pointer;
-  transition: background 0.12s ease;
 }
-.kudora-merken:hover {
-  background: #e0e7ff;
-}
-.kudora-merken:disabled {
-  cursor: default;
-  opacity: 0.75;
+.kudora-copy:hover {
+  filter: brightness(1.05);
 }
 
 .kudora-hinweis {
@@ -65,55 +80,4 @@
   background: #fef3c7;
   border: 1px solid #fcd34d;
   border-radius: 8px;
-}
-
-/* Fallback-Panel (wenn kein Antwortfeld gefunden wird) */
-#kudora-panel {
-  position: fixed;
-  right: 20px;
-  bottom: 20px;
-  width: 320px;
-  z-index: 2147483647;
-  background: #0b0f19;
-  color: #e6e9f2;
-  border: 1px solid #2a3350;
-  border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
-  padding: 12px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-.kudora-panel-kopf {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 700;
-  font-size: 14px;
-  margin-bottom: 8px;
-}
-.kudora-panel-zu {
-  cursor: pointer;
-  color: #9ca3af;
-}
-.kudora-panel-text {
-  width: 100%;
-  box-sizing: border-box;
-  background: #161c2d;
-  color: #e6e9f2;
-  border: 1px solid #2a3350;
-  border-radius: 8px;
-  padding: 8px;
-  font-size: 13px;
-  resize: vertical;
-}
-.kudora-panel-copy {
-  margin-top: 8px;
-  width: 100%;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
 }
