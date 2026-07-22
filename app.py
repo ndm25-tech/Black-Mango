@@ -17,7 +17,7 @@ import streamlit as st
 from bewertungsagent import agent, config, protokoll
 from bewertungsagent.beispiele import BEISPIEL_BEWERTUNGEN
 
-st.set_page_config(page_title="Bewertungs-Antwort", page_icon="💬")
+st.set_page_config(page_title="Kudora", page_icon="💬")
 
 # Premium-SaaS-Styling (nur Optik): Typografie, Karten, Buttons, Animationen.
 st.markdown(
@@ -154,7 +154,7 @@ for schluessel, startwert in {
 
 
 # ------------------------------------------------------------------ Seitenleiste
-st.sidebar.title("💬 Bewertungs-Antwort")
+st.sidebar.title("💬 Kudora")
 st.sidebar.caption("Ihre Antwort auf jede Google-Bewertung — fertig zum Einfügen.")
 
 # Entwickler-Zugang: KEIN sichtbarer Knopf, kein Passwortfeld. Der Bereich öffnet
@@ -296,7 +296,7 @@ st.markdown(
     """
     <div class="app-header">
       <div class="app-logo">💬</div>
-      <p class="app-title">Bewertungs-Antwort</p>
+      <p class="app-title">Kudora</p>
     </div>
     <p class="app-subtitle">KI erstellt professionelle Antworten auf Google-Bewertungen in Sekunden.</p>
     """,
