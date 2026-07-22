@@ -65,16 +65,22 @@ den Stil lernt.
 **So testest du es (ein Befehl + Erweiterung laden):**
 
 ```bash
-# 1. Backend starten (hält den Gemini-Schlüssel server-seitig)
-source .venv/bin/activate
-uvicorn api:app --port 8000        # GOOGLE_API_KEY muss in der Umgebung/.env sein
-
-# 2. Erweiterung laden: Chrome -> chrome://extensions -> "Entwicklermodus" an
-#    -> "Entpackte Erweiterung laden" -> Ordner  extension/  wählen.
-# 3. Auf das Kudora-Symbol klicken -> Backend-Adresse http://localhost:8000
-#    -> "Speichern & prüfen" (sollte "Verbunden ✓" zeigen).
-# 4. Google-Bewertungsseite öffnen -> der Knopf erscheint pro Bewertung.
+# 1. Backend starten – EIN Befehl (legt .venv an, installiert Pakete, startet Server):
+bash start-api.sh
 ```
+
+Danach die Erweiterung laden:
+
+1. Chrome → `chrome://extensions` → **Entwicklermodus** (oben rechts) einschalten.
+2. **„Entpackte Erweiterung laden"** → Ordner `extension/` wählen.
+3. Aufs Kudora-Symbol klicken → Backend-Adresse `http://localhost:8000` →
+   **„Speichern & prüfen"** (sollte **„Verbunden ✓"** zeigen).
+4. Deine Google-Bewertungsseite öffnen → der Knopf erscheint neben jeder Bewertung.
+
+> `bash start-api.sh` ersetzt die manuellen Schritte. Falls du es doch von Hand
+> willst: `python3 -m venv .venv && source .venv/bin/activate && pip install -r
+> requirements.txt && uvicorn api:app --port 8000` (den `GOOGLE_API_KEY` in der
+> `.env` hinterlegen — derselbe wie bei der App).
 
 > ⚠️ **Ehrlicher Hinweis:** Googles Bewertungsseite hat keine öffentliche, stabile
 > HTML-Struktur. Falls der Knopf nicht erscheint oder das falsche Feld füllt, müssen
