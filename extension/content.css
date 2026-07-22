@@ -56,20 +56,39 @@
   resize: vertical;
   min-height: 84px;
 }
-.kudora-copy {
-  margin-top: 6px;
+/* "Senden"-Knopf (grün = die eigentliche Aktion) */
+.kudora-senden {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   font-weight: 600;
   color: #ffffff;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #10b981, #059669);
   border: none;
   border-radius: 8px;
   padding: 7px 14px;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.32);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
-.kudora-copy:hover {
-  filter: brightness(1.05);
+.kudora-senden:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.42);
+}
+.kudora-senden:disabled {
+  cursor: default;
+  opacity: 0.8;
+  transform: none;
+}
+
+/* Hinweis, wenn Senden hier nicht möglich ist (fremdes Profil / Maps) */
+.kudora-sende-hinweis {
+  margin: 6px 0 2px 0;
+  padding: 7px 10px;
+  font-size: 12.5px;
+  color: #3730a3;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
 }
 
 .kudora-hinweis {
