@@ -54,6 +54,46 @@ streamlit run app.py
   Enthält: Training (Übungs-Bewertungen), Gedächtnis ansehen/löschen, Status.
   Ohne gesetztes Passwort ist der Bereich komplett deaktiviert.
 
+## 🧩 Chrome-Erweiterung (Kudora direkt auf der Google-Bewertungsseite)
+
+Damit Kudora **dort** hilft, wo der Wirt arbeitet: Die Erweiterung blendet neben
+jeder Google-Bewertung einen Knopf **„✨ Mit Kudora antworten"** ein → füllt das
+Google-Antwortfeld → der Wirt prüft und klickt **selbst** „Senden" (assistierend,
+kein Auto-Post). „✓ Übernehmen & merken" speichert die finale Antwort, damit Kudora
+den Stil lernt.
+
+**So testest du es (ein Befehl + Erweiterung laden):**
+
+```bash
+# 1. Backend starten – EIN Befehl (legt .venv an, installiert Pakete, startet Server):
+bash start-api.sh
+```
+
+Danach die Erweiterung laden:
+
+1. Chrome → `chrome://extensions` → **Entwicklermodus** (oben rechts) einschalten.
+2. **„Entpackte Erweiterung laden"** → Ordner `extension/` wählen.
+3. Aufs Kudora-Symbol klicken → Backend-Adresse `http://localhost:8000` →
+   **„Speichern & prüfen"** (sollte **„Verbunden ✓"** zeigen).
+4. Deine Google-Bewertungsseite öffnen → der Knopf erscheint neben jeder Bewertung.
+
+> `bash start-api.sh` ersetzt die manuellen Schritte. Falls du es doch von Hand
+> willst: `python3 -m venv .venv && source .venv/bin/activate && pip install -r
+> requirements.txt && uvicorn api:app --port 8000` (den `GOOGLE_API_KEY` in der
+> `.env` hinterlegen — derselbe wie bei der App).
+
+> ⚠️ **Ehrlicher Hinweis:** Googles Bewertungsseite hat keine öffentliche, stabile
+> HTML-Struktur. Falls der Knopf nicht erscheint oder das falsche Feld füllt, müssen
+> nur die Selektoren in `extension/selectors.js` angepasst werden (eingeloggt einmal
+> bestätigen). Zur Sicherheit gibt es ein Fallback-Panel mit „In Zwischenablage".
+>
+> Ohne Chrome kann man die Mechanik über `extension/test/review-page.html` prüfen
+> (nachgebaute Bewertungskarten). Nur Desktop-Chrome/Edge.
+
+**Stufe 2 (später):** direkter Post nach Google via Business-Profile-API — die
+Freigabe dafür muss bei Google beantragt werden. Vorbereitung + fertiger
+Begründungstext: siehe [`docs/google-api-antrag.md`](docs/google-api-antrag.md).
+
 ## 📁 Struktur
 
 ```
@@ -63,7 +103,19 @@ Black-Mango/
 ├── demo.py                   # führt alle Beispiel-Bewertungen durch (nur Anzeige)
 ├── freigabe.py               # Freigabe-Schritt (Kommandozeile): übernehmen/korrigieren
 ├── app.py                    # Streamlit-Oberfläche: Freigabe per Klick
+├── api.py                    # Backend-API (FastAPI) für die Chrome-Erweiterung
 ├── daten/                    # Lern-Protokoll (protokoll.csv, gitignored)
+├── docs/
+│   └── google-api-antrag.md  # Vorbereitung des Google-API-Freigabeantrags (Stufe 2)
+├── extension/                # Chrome-Erweiterung (Manifest V3)
+│   ├── manifest.json
+│   ├── content.js            # Knopf einblenden, Text/Sterne lesen, Antwortfeld füllen
+│   ├── selectors.js          # ALLE Google-DOM-Selektoren an einer Stelle (Pflege leicht)
+│   ├── content.css           # Kudora-Stil (Indigo)
+│   ├── background.js          # Service Worker: ruft das Backend (api.py) auf
+│   ├── popup.html / popup.js  # Einstellungen: Backend-Adresse, An/Aus, Status
+│   ├── icons/                 # 16 / 48 / 128 px
+│   └── test/review-page.html  # nachgebaute Bewertungsseite zum Testen ohne Google
 └── bewertungsagent/
     ├── config.py             # Umgebungsvariablen, Modellname, Lernphase-Schalter
     ├── agent.py              # System-Prompt, Entwurf erzeugen, Freigabe-Logik
