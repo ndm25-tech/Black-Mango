@@ -51,6 +51,28 @@
     return ((el ? el.textContent : karte.textContent) || "").trim();
   }
 
+  // Phrasen, die eine bereits vorhandene Inhaber-Antwort anzeigen.
+  const INHABER_PHRASEN = [
+    "antwort vom inhaber",
+    "antwort des inhabers",
+    "response from the owner",
+    "owner's response",
+    "reply from the owner",
+  ];
+
+  /* Ist die Bewertung schon (vom Inhaber) beantwortet? Dann zeigt Kudora sich nicht. */
+  function istBeantwortet(karte) {
+    if (firstMatch(karte, S.ownerReply)) return true;
+    const t = (karte.textContent || "").toLowerCase();
+    return INHABER_PHRASEN.some((p) => t.includes(p));
+  }
+
+  /* Kann man hier überhaupt antworten? (eigenes Profil = Antwortfeld ODER
+   * ein "Antworten"-Knopf vorhanden). Sonst zeigt Kudora sich nicht. */
+  function kannAntworten(karte) {
+    return !!(firstMatch(karte, S.reply) || firstMatch(karte, S.replyTrigger));
+  }
+
   function leseSterne(karte) {
     const el = firstMatch(karte, S.stars) || karte;
     if (el.getAttribute) {
@@ -280,10 +302,18 @@
     }
     const entwurf = (res.entwurf || "").trim();
 
-    // Wenn diese Bewertung ein echtes Antwortfeld hat (eigenes Profil), dort
-    // hineinschreiben (editierbar); sonst ein editierbares Feld unter die
-    // Bewertung setzen. WICHTIG: nur ein Feld INNERHALB der Karte nutzen.
-    const feld = firstMatch(karte, S.reply);
+    // Antwortfeld der eigenen Bewertung finden. Fehlt es, aber es gibt einen
+    // "Antworten"-Knopf (Inhaber-Ansicht), diesen klicken, um Googles Feld zu
+    // öffnen, kurz warten und erneut suchen. WICHTIG: nur INNERHALB der Karte.
+    let feld = firstMatch(karte, S.reply);
+    if (!feld) {
+      const ausloeser = firstMatch(karte, S.replyTrigger);
+      if (ausloeser) {
+        ausloeser.click();
+        await new Promise((r) => setTimeout(r, 350));
+        feld = firstMatch(karte, S.reply);
+      }
+    }
     let box = null;
     if (feld) {
       setzeFeldwert(feld, entwurf);
@@ -307,6 +337,11 @@
     // Ebenen) sollen nur EINEN Knopf bekommen.
     if (karte.querySelector(".kudora-bar")) return; // ein Nachfahre hat schon einen
     if (karte.parentElement && karte.parentElement.closest("[" + MARK + "]")) return;
+
+    // NUR unbeantwortete Bewertungen, und nur wo man wirklich antworten kann
+    // (eigenes Unternehmensprofil). Sonst zeigt Kudora sich gar nicht.
+    if (istBeantwortet(karte)) return;
+    if (!kannAntworten(karte)) return;
 
     karte.setAttribute(MARK, "1");
     const leiste = document.createElement("div");

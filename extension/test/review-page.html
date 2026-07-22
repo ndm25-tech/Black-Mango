@@ -87,7 +87,7 @@
       <button data-kudora-send onclick="window.__GESENDET__=(window.__GESENDET__||0)+1">Antwort posten</button>
     </div>
 
-    <!-- Karte 2: Kritik (2 Sterne) -->
+    <!-- Karte 2: SCHON beantwortet (Inhaber-Antwort vorhanden) -> Kudora skippt. -->
     <div data-kudora-review>
       <div class="autor">Thomas K.</div>
       <div class="sterne" data-kudora-stars data-kudora-stars-value="2" aria-label="2 von 5 Sternen">★★☆☆☆</div>
@@ -95,13 +95,17 @@
         Wir mussten über 40 Minuten auf das Essen warten und der Tisch war nicht
         richtig sauber. Schade, das Ambiente ist eigentlich schön.
       </div>
+      <div class="inhaber-antwort">
+        <strong>Antwort vom Inhaber</strong> vor 1 Monat<br />
+        Vielen Dank für Ihr Feedback, wir kümmern uns darum.
+      </div>
       <div class="antwort-label">Öffentlich antworten</div>
       <textarea data-kudora-reply aria-label="Antwort schreiben" placeholder="Ihre Antwort …"></textarea>
       <button data-kudora-send onclick="window.__GESENDET__=(window.__GESENDET__||0)+1">Antwort posten</button>
     </div>
 
-    <!-- Karte 3: Lob (5 Sterne), OHNE Antwortfeld -> testet die Inline-Antwortbox
-         (wie auf Google Maps, wo es kein eigenes Antwortfeld gibt). -->
+    <!-- Karte 3: Lob (5 Sterne), OHNE Antwortfeld und ohne "Antworten"-Knopf
+         (wie auf einer FREMDEN Maps-Seite) -> Kudora skippt (nicht antwortbar). -->
     <div data-kudora-review>
       <div class="autor">Sara L.</div>
       <div class="sterne" data-kudora-stars data-kudora-stars-value="5" aria-label="5 von 5 Sternen">★★★★★</div>
