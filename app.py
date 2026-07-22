@@ -42,20 +42,26 @@ st.markdown(
           max-width: 46rem;
       }
 
-      /* ---------- Header ---------- */
+      /* ---------- Header (zentriert) ---------- */
       .app-header {
-          display: flex; align-items: center; gap: 14px;
-          padding: 1.4rem 0 0.4rem 0;
+          display: flex; flex-direction: column; align-items: center;
+          padding: 1.6rem 0 0.2rem 0;
       }
       .app-logo {
-          width: 46px; height: 46px; border-radius: 12px; flex: 0 0 46px;
+          width: 46px; height: 46px; border-radius: 12px;
           background: linear-gradient(135deg, #6366F1, #8B5CF6);
           display: flex; align-items: center; justify-content: center;
           font-size: 22px; box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
       }
       .app-title { font-size: 1.65rem; font-weight: 700; letter-spacing: -0.02em;
-                   color: #E6E9F2; margin: 0; }
-      .app-subtitle { color: #98A2B8; font-size: 0.98rem; margin: 0.15rem 0 1.6rem 60px; }
+                   color: #E6E9F2; margin: 10px 0 0 0; text-align: center; }
+      .app-subtitle {
+          text-align: center;
+          font-size: 15px;
+          font-weight: 450;
+          color: #9CA3AF;
+          margin: 7px 0 20px 0;
+      }
 
       /* ---------- Karten / Formulare ---------- */
       div[data-testid="stForm"] {
@@ -298,7 +304,7 @@ st.markdown(
       <div class="app-logo">💬</div>
       <p class="app-title">Kudora</p>
     </div>
-    <p class="app-subtitle">KI erstellt professionelle Antworten auf Google-Bewertungen in Sekunden.</p>
+    <p class="app-subtitle">Professional AI Review Assistant</p>
     """,
     unsafe_allow_html=True,
 )
