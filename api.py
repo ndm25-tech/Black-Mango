@@ -15,7 +15,9 @@ Start (lokal):
   uvicorn api:app --reload --port 8000
 """
 
-from fastapi import FastAPI
+import os
+
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -32,6 +34,16 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Schutz-Token: ist online KUDORA_TOKEN gesetzt, müssen /api/*-Aufrufe im Header
+# X-Kudora-Token genau diesen Wert senden (nur die eigene Erweiterung kennt ihn).
+# Lokal (kein KUDORA_TOKEN gesetzt) ist kein Token nötig -> Testen bleibt einfach.
+KUDORA_TOKEN = os.getenv("KUDORA_TOKEN", "")
+
+
+def pruefe_token(x_kudora_token: str = Header(default="")) -> None:
+    if KUDORA_TOKEN and x_kudora_token != KUDORA_TOKEN:
+        raise HTTPException(status_code=401, detail="Ungültiges oder fehlendes Token.")
 
 
 class AntwortAnfrage(BaseModel):
@@ -54,7 +66,7 @@ def health() -> dict:
     return {"status": "ok", "modell": agent.aktives_modell()}
 
 
-@app.post("/api/antwort")
+@app.post("/api/antwort", dependencies=[Depends(pruefe_token)])
 def antwort(anfrage: AntwortAnfrage) -> dict:
     """Erzeugt einen Antwort-Entwurf für eine Bewertung (nutzt Stil-Lernen)."""
     try:
@@ -71,7 +83,7 @@ def antwort(anfrage: AntwortAnfrage) -> dict:
         return {"ok": False, "fehler": "unbekannt", "meldung": str(fehler)}
 
 
-@app.post("/api/freigabe")
+@app.post("/api/freigabe", dependencies=[Depends(pruefe_token)])
 def freigabe(anfrage: FreigabeAnfrage) -> dict:
     """Speichert eine freigegebene Antwort -> Agent lernt den Stil fürs nächste Mal."""
     zeile = protokoll.speichere(

@@ -5,13 +5,25 @@
  * Google-Seite nicht stören und der Backend-Zugriff an einer Stelle liegt.
  */
 
-const STANDARD_URL = "http://localhost:8000";
+// Feste Konfiguration (Server-Adresse + Token) aus config.js laden.
+importScripts("config.js");
+const CFG = self.KUDORA_CONFIG || {};
+const STANDARD_URL = CFG.backendUrl || "http://localhost:8000";
+const TOKEN = CFG.token || "";
 
 async function holeConfig() {
+  // Eine im Popup gesetzte Adresse hat Vorrang; sonst der Wert aus config.js.
   const gespeichert = await chrome.storage.sync.get(["backendUrl", "enabled"]);
   const backendUrl = (gespeichert.backendUrl || STANDARD_URL).replace(/\/+$/, "");
   const enabled = gespeichert.enabled !== false; // Standard: an
   return { backendUrl, enabled };
+}
+
+function kopfzeilen(mitJson) {
+  const h = {};
+  if (mitJson) h["Content-Type"] = "application/json";
+  if (TOKEN) h["X-Kudora-Token"] = TOKEN; // Schutz gegen Fremdzugriff
+  return h;
 }
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -21,7 +33,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       try {
         const res = await fetch(backendUrl + msg.path, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: kopfzeilen(true),
           body: JSON.stringify(msg.body || {}),
         });
         sendResponse({ ok: true, data: await res.json() });
@@ -36,7 +48,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg && msg.type === "kudora-health") {
     holeConfig().then(async ({ backendUrl }) => {
       try {
-        const res = await fetch(backendUrl + "/");
+        const res = await fetch(backendUrl + "/", { headers: kopfzeilen(false) });
         sendResponse({ ok: true, data: await res.json() });
       } catch (e) {
         sendResponse({ ok: false, error: String(e) });
