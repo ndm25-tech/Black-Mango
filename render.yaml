@@ -1,0 +1,15 @@
+# Render-Blueprint für das Kudora-Backend (api.py).
+# Auf render.com: "New +" -> "Blueprint" -> dieses Repo wählen -> Apply.
+# Danach die beiden Secrets (GOOGLE_API_KEY, KUDORA_TOKEN) eintragen.
+services:
+  - type: web
+    name: kudora-api
+    runtime: python
+    plan: starter # kleiner Dauer-Server (immer an); "free" = gratis, schläft ein
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false # im Render-Dashboard eintragen (nicht ins Repo!)
+      - key: KUDORA_TOKEN
+        sync: false # dasselbe Token wie in extension/config.js

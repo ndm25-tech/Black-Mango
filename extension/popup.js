@@ -1,6 +1,7 @@
 /* Popup-Logik: Backend-Adresse speichern, An/Aus, Server-Status prüfen. */
 
-const STANDARD_URL = "http://localhost:8000";
+const STANDARD_URL =
+  (self.KUDORA_CONFIG && self.KUDORA_CONFIG.backendUrl) || "http://localhost:8000";
 
 const urlFeld = document.getElementById("url");
 const enabledFeld = document.getElementById("enabled");
