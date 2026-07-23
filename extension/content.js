@@ -88,8 +88,26 @@
     return 5;
   }
 
-  /* Setzt den Wert so, dass auch von Google/React kontrollierte Felder es merken. */
+  // Ist das Feld ein bearbeitbares div (contenteditable / role=textbox)?
+  function istEditierbar(el) {
+    return !!(
+      el &&
+      (el.isContentEditable ||
+        el.getAttribute("contenteditable") === "true" ||
+        el.getAttribute("role") === "textbox")
+    );
+  }
+
+  /* Setzt den Wert so, dass auch von Google/React kontrollierte Felder es merken —
+   * funktioniert für <textarea>/<input> UND für bearbeitbare div-Felder. */
   function setzeFeldwert(el, wert) {
+    if (istEditierbar(el) && el.tagName !== "TEXTAREA" && el.tagName !== "INPUT") {
+      el.focus();
+      el.textContent = wert;
+      el.dispatchEvent(new InputEvent("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+      return;
+    }
     const proto =
       el.tagName === "TEXTAREA"
         ? window.HTMLTextAreaElement.prototype
@@ -99,6 +117,13 @@
     else el.value = wert;
     el.dispatchEvent(new Event("input", { bubbles: true }));
     el.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  // Aktueller Text eines Feldes (Textarea/Input ODER bearbeitbares div).
+  function feldWert(el) {
+    if (!el) return "";
+    if (typeof el.value === "string" && el.tagName !== "DIV") return el.value;
+    return el.innerText || el.textContent || "";
   }
 
   /* ---------- Backend-Aufruf (mit Test-Weiche) ---------- */
@@ -336,14 +361,59 @@
     return firstMatch(karte, S.replyTrigger);
   }
 
-  // Das offene Antwort-Fenster (Dialog mit Textfeld) finden.
+  // Ein bearbeitbares Feld innerhalb eines Bereichs finden (Textarea/Input/div).
+  function findeFeldIn(root) {
+    return (
+      root.querySelector('textarea[aria-label*="ffentlich" i]') ||
+      root.querySelector('[contenteditable="true"][aria-label*="ffentlich" i]') ||
+      root.querySelector('[role="textbox"][aria-label*="ffentlich" i]') ||
+      root.querySelector("textarea") ||
+      root.querySelector('[contenteditable="true"]') ||
+      root.querySelector('[role="textbox"]') ||
+      root.querySelector('input[type="text"]')
+    );
+  }
+
+  // Kleinsten Container finden, dessen Überschrift/Text die Phrase enthält und
+  // der ein bearbeitbares Feld besitzt (für Googles Antwort-Fenster).
+  function findeContainerMitText(phrase) {
+    const els = document.querySelectorAll("h1,h2,h3,div,span");
+    for (const el of els) {
+      const t = (el.textContent || "").trim().toLowerCase();
+      if (t === phrase || t.startsWith(phrase)) {
+        let p = el;
+        for (let i = 0; i < 7 && p; i++) {
+          if (findeFeldIn(p)) return p;
+          p = p.parentElement;
+        }
+      }
+    }
+    return null;
+  }
+
+  /* Das offene Antwort-Fenster ("Auf Rezension antworten") + sein Textfeld finden.
+   * Robust: echtes Textfeld ist mal <textarea>, mal ein bearbeitbares div; das
+   * Fenster hat nicht immer role="dialog". Erkennung daher textbasiert. */
   function findeModal() {
-    const feld =
-      document.querySelector('textarea[aria-label*="ffentlich"]') ||
-      document.querySelector('[role="dialog"] textarea') ||
-      firstMatch(document, S.reply);
+    // 1) Feld direkt über sein aria-label ("Öffentlich antworten").
+    let feld =
+      document.querySelector('textarea[aria-label*="ffentlich" i]') ||
+      document.querySelector('[contenteditable="true"][aria-label*="ffentlich" i]') ||
+      document.querySelector('[role="textbox"][aria-label*="ffentlich" i]');
+    let modal = null;
+    // 2) Über die Überschrift "Auf Rezension antworten".
+    if (!feld) {
+      modal = findeContainerMitText("auf rezension antworten");
+      if (modal) feld = findeFeldIn(modal);
+    }
+    // 3) Irgendein Dialog mit bearbeitbarem Feld.
+    if (!feld) {
+      const dlg = document.querySelector('[role="dialog"]');
+      if (dlg) feld = findeFeldIn(dlg);
+      if (feld) modal = dlg;
+    }
     if (!feld) return null;
-    const modal = feld.closest('[role="dialog"]') || feld.parentElement || document.body;
+    if (!modal) modal = feld.closest('[role="dialog"]') || findeContainerMitText("auf rezension antworten") || feld.parentElement || document.body;
     return { modal, feld };
   }
 
@@ -401,7 +471,11 @@
     senden.style.display = "none";
     leiste.appendChild(gen);
     leiste.appendChild(senden);
-    feld.insertAdjacentElement("afterend", leiste);
+    // Schön platzieren: direkt vor Googles eigenem "Antworten"-Knopf (unten
+    // rechts, neben dem Hinweistext). Sonst gleich unter das Textfeld.
+    const submitJetzt = findeModalSubmit(modal);
+    if (submitJetzt) submitJetzt.insertAdjacentElement("beforebegin", leiste);
+    else feld.insertAdjacentElement("afterend", leiste);
 
     const ctx = { original: "", sterne: 5, entwurf: "" };
 
@@ -440,7 +514,7 @@
       generiere().catch((e) => (gen.textContent = "⚠ " + String(e)));
     });
     senden.addEventListener("click", () => {
-      const finale = (feld.value || "").trim();
+      const finale = feldWert(feld).trim();
       if (!finale) return;
       // Lernen (auch aus Änderungen), dann Googles Senden-Knopf klicken.
       sendeFreigabe({
@@ -451,12 +525,18 @@
         finale_antwort: finale,
       });
       const submit = findeModalSubmit(modal);
-      if (submit) {
+      const aktiv =
+        submit && !submit.disabled && submit.getAttribute("aria-disabled") !== "true";
+      if (aktiv) {
         submit.click();
         senden.disabled = true;
         senden.textContent = "✓ Gesendet";
       } else {
+        // Feld ist gefüllt, aber Googles Knopf reagiert (noch) nicht -> Nutzer klickt.
         senden.textContent = 'Jetzt „Antworten" klicken';
+        senden.title =
+          "Kudora hat die Antwort eingefügt und gelernt. Bitte klicken Sie Googles " +
+          '"Antworten"-Knopf.';
       }
     });
 

@@ -7,6 +7,12 @@
   align-items: center;
 }
 
+/* Leiste im Google-Antwort-Fenster: dezent, mit etwas Abstand */
+.kudora-modal-bar {
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+
 .kudora-btn {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
