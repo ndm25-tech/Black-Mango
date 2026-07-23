@@ -70,7 +70,8 @@
   /* Kann man hier überhaupt antworten? (eigenes Profil = Antwortfeld ODER
    * ein "Antworten"-Knopf vorhanden). Sonst zeigt Kudora sich nicht. */
   function kannAntworten(karte) {
-    return !!(firstMatch(karte, S.reply) || firstMatch(karte, S.replyTrigger));
+    // Antwortfeld ODER ein "Antworten"-Knopf (Text-basiert erkannt) in der Karte.
+    return !!(firstMatch(karte, S.reply) || findeTrigger(karte));
   }
 
   function leseSterne(karte) {
@@ -311,64 +312,244 @@
     }
   }
 
-  async function aufGenerieren(karte, btn) {
-    const leiste = btn.parentNode;
-    const original = leseText(karte);
-    if (!original) {
-      knopfStatus(btn, "fehler", "Kein Bewertungstext gefunden.");
-      return;
-    }
-    const sterne = leseSterne(karte);
-    knopfStatus(btn, "laden");
-    const res = await holeAntwort({ original, sterne, betrieb: "" });
-    if (!res || res.ok === false) {
-      knopfStatus(btn, "fehler", (res && res.meldung) || "Fehler.");
-      return;
-    }
-    const entwurf = (res.entwurf || "").trim();
+  /* ---------- Googles Antwort-Fenster ("Auf Rezension antworten") ---------- */
 
-    // Antwortfeld der eigenen Bewertung finden. Fehlt es, aber es gibt einen
-    // "Antworten"-Knopf (Inhaber-Ansicht), diesen klicken, um Googles Feld zu
-    // öffnen, kurz warten und erneut suchen. WICHTIG: nur INNERHALB der Karte.
-    let feld = firstMatch(karte, S.reply);
-    if (!feld) {
-      const ausloeser = firstMatch(karte, S.replyTrigger);
-      if (ausloeser) {
-        ausloeser.click();
-        await new Promise((r) => setTimeout(r, 350));
-        feld = firstMatch(karte, S.reply);
+  // Kontext der zuletzt per Kudora angeklickten Bewertung (voller Text + Sterne),
+  // damit das Modal daraus generiert (statt aus dem gekürzten Modal-Text).
+  let modalKontext = null;
+
+  const TRIGGER_WOERTER = ["antworten", "reply"];
+  const SUBMIT_WOERTER = ["antworten", "senden", "posten", "reply", "send", "post"];
+
+  // Nur Buchstaben, klein — so matcht "↩ Antworten" == "antworten", aber
+  // "Öffentlich antworten" (das Textfeld-Label) NICHT.
+  function normText(el) {
+    const roh =
+      (el.getAttribute && el.getAttribute("aria-label")) || el.textContent || "";
+    return roh.toLowerCase().replace(/[^a-zäöüß]/g, "");
+  }
+
+  // Googles "Antworten"-Knopf einer Karte (öffnet das Antwort-Fenster).
+  function findeTrigger(karte) {
+    const els = karte.querySelectorAll('button,[role="button"],a');
+    for (const el of els) if (TRIGGER_WOERTER.includes(normText(el))) return el;
+    return firstMatch(karte, S.replyTrigger);
+  }
+
+  // Das offene Antwort-Fenster (Dialog mit Textfeld) finden.
+  function findeModal() {
+    const feld =
+      document.querySelector('textarea[aria-label*="ffentlich"]') ||
+      document.querySelector('[role="dialog"] textarea') ||
+      firstMatch(document, S.reply);
+    if (!feld) return null;
+    const modal = feld.closest('[role="dialog"]') || feld.parentElement || document.body;
+    return { modal, feld };
+  }
+
+  function findeModalSubmit(modal) {
+    const els = modal.querySelectorAll('button,[role="button"]');
+    let treffer = null;
+    for (const el of els) if (SUBMIT_WOERTER.includes(normText(el))) treffer = el;
+    return treffer; // der (letzte) Senden/Antworten-Knopf im Fenster
+  }
+
+  // Bewertungstext grob aus dem Fenster lesen (Fallback, wenn kein Karten-Kontext).
+  function leseModalReview(modal) {
+    const ignor = [
+      "auf rezension antworten",
+      "öffentlich antworten",
+      "inhaber",
+      "antworten",
+      "senden",
+      "abbrechen",
+      "mehr",
+      "vollständige rezension ansehen",
+      "der kunde wird über ihre antwort",
+    ];
+    let best = "";
+    for (const roh of (modal.innerText || "").split("\n")) {
+      const l = roh.trim();
+      if (!l || /^\d+\/\d+$/.test(l)) continue;
+      const low = l.toLowerCase();
+      if (ignor.some((i) => low.includes(i))) continue;
+      if (l.length > best.length) best = l;
+    }
+    return best;
+  }
+
+  /* Kudora in Googles Antwort-Fenster einbauen: generieren, ins echte Textfeld
+   * schreiben, "✓ Senden" (klickt Googles Senden-Knopf). Läuft egal ob das Fenster
+   * über den Kudora-Knopf ODER über Googles "Antworten" geöffnet wurde. */
+  async function behandleModal() {
+    const gefunden = findeModal();
+    if (!gefunden) return;
+    const { modal, feld } = gefunden;
+    if (feld.dataset.kudoraModal) return; // schon eingebaut
+    feld.dataset.kudoraModal = "1";
+
+    const leiste = document.createElement("div");
+    leiste.className = "kudora-bar kudora-modal-bar";
+    const gen = document.createElement("button");
+    gen.type = "button";
+    gen.className = "kudora-btn";
+    gen.textContent = "✨ Mit Kudora schreiben";
+    const senden = document.createElement("button");
+    senden.type = "button";
+    senden.className = "kudora-senden";
+    senden.textContent = "✓ Senden";
+    senden.style.display = "none";
+    leiste.appendChild(gen);
+    leiste.appendChild(senden);
+    feld.insertAdjacentElement("afterend", leiste);
+
+    const ctx = { original: "", sterne: 5, entwurf: "" };
+
+    async function generiere() {
+      const quelle = modalKontext || {
+        original: leseModalReview(modal),
+        sterne: 5,
+      };
+      ctx.original = quelle.original;
+      ctx.sterne = quelle.sterne || 5;
+      if (!ctx.original) {
+        gen.textContent = "⚠ Keine Bewertung erkannt";
+        return;
       }
-    }
-    let box = null;
-    if (feld) {
-      setzeFeldwert(feld, entwurf);
+      gen.disabled = true;
+      gen.textContent = "✨ Kudora schreibt …";
+      const res = await holeAntwort({
+        original: ctx.original,
+        sterne: ctx.sterne,
+        betrieb: "",
+      });
+      gen.disabled = false;
+      if (!res || res.ok === false) {
+        gen.textContent = "⚠ Nochmal versuchen";
+        gen.title = (res && res.meldung) || "Fehler.";
+        return;
+      }
+      ctx.entwurf = (res.entwurf || "").trim();
+      setzeFeldwert(feld, ctx.entwurf);
       feld.focus();
-    } else {
-      box = zeigeInlineAntwort(leiste, entwurf);
+      gen.textContent = "↻ Neue Formulierung";
+      senden.style.display = "";
     }
 
-    // Hinweis NUR bei heiklen Fällen: schlechte (≤3 Sterne) ODER riskante.
-    const heikel = (res.risikowoerter && res.risikowoerter.length > 0) || sterne <= 3;
-    if (heikel) zeigeHinweis(karte);
-    else entferneHinweis(karte);
+    gen.addEventListener("click", () => {
+      generiere().catch((e) => (gen.textContent = "⚠ " + String(e)));
+    });
+    senden.addEventListener("click", () => {
+      const finale = (feld.value || "").trim();
+      if (!finale) return;
+      // Lernen (auch aus Änderungen), dann Googles Senden-Knopf klicken.
+      sendeFreigabe({
+        original: ctx.original,
+        sterne: ctx.sterne,
+        betrieb: "",
+        entwurf: ctx.entwurf,
+        finale_antwort: finale,
+      });
+      const submit = findeModalSubmit(modal);
+      if (submit) {
+        submit.click();
+        senden.disabled = true;
+        senden.textContent = "✓ Gesendet";
+      } else {
+        senden.textContent = 'Jetzt „Antworten" klicken';
+      }
+    });
 
-    knopfStatus(btn, "fertig"); // Knopf wird zu "↻ Neue Formulierung"
-    aktualisiereSendenKnopf(leiste, { karte, original, sterne, entwurf, feld, box });
+    // Kamen wir über den Kudora-Knopf (Kontext gesetzt), sofort generieren.
+    if (modalKontext) {
+      await generiere();
+      modalKontext = null;
+    }
+  }
+
+  /* Klick auf den Kudora-Knopf einer Karte: Googles "Antworten" öffnen — das
+   * Antwort-Fenster übernimmt dann (behandleModal). Gibt es (anderes Layout)
+   * ein direktes Feld in der Karte, wird dieses gefüllt. */
+  async function aufGenerieren(karte, btn) {
+    try {
+      const original = leseText(karte);
+      if (!original) {
+        knopfStatus(btn, "fehler", "Kein Bewertungstext gefunden.");
+        return;
+      }
+      const sterne = leseSterne(karte);
+
+      // Anderes Layout: direktes Antwortfeld in der Karte (nicht im Dialog).
+      const feld = firstMatch(karte, S.reply);
+      if (feld && !feld.closest('[role="dialog"]')) {
+        knopfStatus(btn, "laden");
+        const res = await holeAntwort({ original, sterne, betrieb: "" });
+        if (!res || res.ok === false) {
+          knopfStatus(btn, "fehler", (res && res.meldung) || "Fehler.");
+          return;
+        }
+        const entwurf = (res.entwurf || "").trim();
+        setzeFeldwert(feld, entwurf);
+        feld.focus();
+        const heikel =
+          (res.risikowoerter && res.risikowoerter.length > 0) || sterne <= 3;
+        if (heikel) zeigeHinweis(karte);
+        else entferneHinweis(karte);
+        knopfStatus(btn, "fertig");
+        aktualisiereSendenKnopf(btn.parentNode, {
+          karte,
+          original,
+          sterne,
+          entwurf,
+          feld,
+          box: null,
+        });
+        return;
+      }
+
+      // Normalfall (Google Maps Inhaber): "Antworten" öffnen -> Modal übernimmt.
+      modalKontext = { original, sterne };
+      const trigger = findeTrigger(karte);
+      if (trigger) {
+        trigger.click();
+        knopfStatus(btn, "standard"); // Karten-Knopf zurücksetzen
+        return;
+      }
+
+      // Kein Weg zu antworten -> Inline-Box (kommt bei korrektem Gating kaum vor).
+      knopfStatus(btn, "laden");
+      const res = await holeAntwort({ original, sterne, betrieb: "" });
+      if (!res || res.ok === false) {
+        knopfStatus(btn, "fehler", (res && res.meldung) || "Fehler.");
+        return;
+      }
+      zeigeInlineAntwort(btn.parentNode, (res.entwurf || "").trim());
+      knopfStatus(btn, "standard");
+    } catch (e) {
+      knopfStatus(btn, "fehler", String(e));
+    }
   }
 
   function injiziereKnopf(karte) {
-    if (karte.getAttribute(MARK)) return;
-    // Dopplung vermeiden: verschachtelte Karten (Google-Layout matcht mehrere
-    // Ebenen) sollen nur EINEN Knopf bekommen.
-    if (karte.querySelector(".kudora-bar")) return; // ein Nachfahre hat schon einen
-    if (karte.parentElement && karte.parentElement.closest("[" + MARK + "]")) return;
+    // Verschachtelte Karten: wenn ein Vorfahre schon einen Kudora-Knopf hat, raus.
+    if (karte.parentElement && karte.parentElement.closest(".kudora-hat-knopf")) return;
 
-    // NUR unbeantwortete Bewertungen, und nur wo man wirklich antworten kann
-    // (eigenes Unternehmensprofil). Sonst zeigt Kudora sich gar nicht.
-    if (istBeantwortet(karte)) return;
+    const schonBar = karte.querySelector(":scope > .kudora-bar");
+
+    // Schon beantwortet -> evtl. vorhandenen Knopf entfernen, dann raus.
+    if (istBeantwortet(karte)) {
+      if (schonBar) schonBar.remove();
+      karte.classList.remove("kudora-hat-knopf");
+      return;
+    }
+    // Hier kann man nicht antworten -> kein Knopf.
     if (!kannAntworten(karte)) return;
 
-    karte.setAttribute(MARK, "1");
+    // Bar noch vorhanden -> nichts tun. Fehlt sie (Google hat beim Aufklappen
+    // neu gerendert), bauen wir sie unten neu -> Knopf verschwindet nicht mehr.
+    if (schonBar) return;
+
+    karte.classList.add("kudora-hat-knopf");
     const leiste = document.createElement("div");
     leiste.className = "kudora-bar";
     const btn = document.createElement("button");
@@ -396,6 +577,8 @@
           /* eine kaputte Karte darf den Rest nicht stoppen */
         }
       });
+      // Ist Googles Antwort-Fenster offen? Dann Kudora dort einbauen.
+      behandleModal().catch(() => {});
     } catch (_) {
       /* Scan-Fehler schlucken -> nie roter Erweiterungs-Fehler */
     }

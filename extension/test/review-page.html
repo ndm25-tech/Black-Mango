@@ -7,129 +7,104 @@
          Erweiterung lädt content.css automatisch über das Manifest). -->
     <link rel="stylesheet" href="../content.css" />
     <style>
-      body {
-        font-family: Roboto, Arial, sans-serif;
-        background: #f8f9fa;
-        color: #202124;
-        max-width: 720px;
-        margin: 24px auto;
-        padding: 0 16px;
-      }
-      h1 {
-        font-size: 18px;
-        color: #5f6368;
-      }
-      .hinweis {
-        font-size: 13px;
-        color: #5f6368;
-        background: #fff;
-        border: 1px solid #dadce0;
-        border-radius: 8px;
-        padding: 10px 12px;
-        margin-bottom: 16px;
-      }
-      [data-kudora-review] {
-        background: #fff;
-        border: 1px solid #dadce0;
-        border-radius: 12px;
-        padding: 16px;
-        margin-bottom: 16px;
-      }
-      .autor {
-        font-weight: 600;
-        margin-bottom: 2px;
-      }
-      .sterne {
-        color: #fbbc04;
-        font-size: 15px;
-        margin-bottom: 6px;
-      }
-      [data-kudora-text] {
-        font-size: 14px;
-        line-height: 1.5;
-      }
-      .antwort-label {
-        margin-top: 12px;
-        font-size: 12px;
-        color: #5f6368;
-      }
-      textarea[data-kudora-reply] {
-        width: 100%;
-        box-sizing: border-box;
-        margin-top: 4px;
-        border: 1px solid #dadce0;
-        border-radius: 8px;
-        padding: 8px;
-        font-size: 14px;
-        min-height: 60px;
-      }
+      body { font-family: Roboto, Arial, sans-serif; background: #f8f9fa; color: #202124; max-width: 720px; margin: 24px auto; padding: 0 16px; }
+      h1 { font-size: 18px; color: #5f6368; }
+      .hinweis { font-size: 13px; color: #5f6368; background: #fff; border: 1px solid #dadce0; border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; }
+      [data-kudora-review] { background: #fff; border: 1px solid #dadce0; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+      .autor { font-weight: 600; margin-bottom: 2px; }
+      .sterne { color: #fbbc04; font-size: 15px; margin-bottom: 6px; }
+      [data-kudora-text] { font-size: 14px; line-height: 1.5; }
+      .aktionen { margin-top: 10px; display: flex; gap: 16px; }
+      .aktionen button { background: none; border: none; color: #1a73e8; font-size: 14px; cursor: pointer; padding: 0; }
+      .inhaber-antwort { margin-top: 10px; font-size: 13px; color: #3c4043; }
+      /* nachgebautes Google-Fenster */
+      #modal[role="dialog"] { position: fixed; inset: 0; margin: auto; width: 560px; height: 380px; background: #fff; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.3); padding: 22px; }
+      #modal .titel { font-size: 18px; margin-bottom: 14px; }
+      #modal textarea { width: 100%; box-sizing: border-box; min-height: 120px; border: 2px solid #1a73e8; border-radius: 8px; padding: 10px; font-size: 14px; }
+      #modal .submit { margin-top: 14px; float: right; background: #1a73e8; color: #fff; border: none; border-radius: 18px; padding: 8px 20px; font-size: 14px; cursor: pointer; }
     </style>
   </head>
   <body>
     <h1>Nachgebaute Google-Bewertungsseite (nur zum Testen der Erweiterung)</h1>
     <div class="hinweis">
-      Diese Seite ahmt zwei Google-Bewertungs-Karten nach (mit
-      <code>data-kudora-*</code>-Ankern). Sie dient nur der Prüfung, dass der
-      Kudora-Knopf erscheint, Text + Sterne liest und das Antwortfeld füllt. Die
-      echten Google-Anker bestätigt man später eingeloggt.
+      Ahmt die <b>Inhaber-Ansicht</b> nach: jede Rezension hat einen
+      „Antworten"-Knopf, der ein Fenster („Auf Rezension antworten") mit Textfeld
+      und Senden-Knopf öffnet — dort baut sich Kudora ein.
     </div>
 
-    <!-- Karte 1: Lob (5 Sterne) -->
+    <!-- Karte 1: UNBEANTWORTET, mit "Antworten"-Knopf -> Kudora zeigt sich. -->
     <div data-kudora-review>
-      <div class="autor">Maria S.</div>
+      <div class="autor">Jamil Bashar</div>
       <div class="sterne" data-kudora-stars data-kudora-stars-value="5" aria-label="5 von 5 Sternen">★★★★★</div>
       <div data-kudora-text>
-        Wirklich tolles Essen und sehr freundlicher Service. Die Pasta war
-        fantastisch, wir kommen gerne wieder!
+        Die Reinigungsfirma war pünktlich und zuverlässig. Die Arbeit wurde sehr
+        gründlich erledigt. Alles war danach sauber und ordentlich.
       </div>
-      <div class="antwort-label">Öffentlich antworten</div>
-      <textarea data-kudora-reply aria-label="Antwort schreiben" placeholder="Ihre Antwort …"></textarea>
-      <button data-kudora-send onclick="window.__GESENDET__=(window.__GESENDET__||0)+1">Antwort posten</button>
+      <div class="aktionen">
+        <button class="antworten-trigger">↩ Antworten</button>
+        <button>Gefällt mir</button>
+        <button>Teilen</button>
+      </div>
     </div>
 
-    <!-- Karte 2: SCHON beantwortet (Inhaber-Antwort vorhanden) -> Kudora skippt. -->
+    <!-- Karte 2: SCHON beantwortet -> Kudora skippt. -->
     <div data-kudora-review>
-      <div class="autor">Thomas K.</div>
-      <div class="sterne" data-kudora-stars data-kudora-stars-value="2" aria-label="2 von 5 Sternen">★★☆☆☆</div>
-      <div data-kudora-text>
-        Wir mussten über 40 Minuten auf das Essen warten und der Tisch war nicht
-        richtig sauber. Schade, das Ambiente ist eigentlich schön.
-      </div>
-      <div class="inhaber-antwort">
-        <strong>Antwort vom Inhaber</strong> vor 1 Monat<br />
-        Vielen Dank für Ihr Feedback, wir kümmern uns darum.
-      </div>
-      <div class="antwort-label">Öffentlich antworten</div>
-      <textarea data-kudora-reply aria-label="Antwort schreiben" placeholder="Ihre Antwort …"></textarea>
-      <button data-kudora-send onclick="window.__GESENDET__=(window.__GESENDET__||0)+1">Antwort posten</button>
-    </div>
-
-    <!-- Karte 3: Lob (5 Sterne), OHNE Antwortfeld und ohne "Antworten"-Knopf
-         (wie auf einer FREMDEN Maps-Seite) -> Kudora skippt (nicht antwortbar). -->
-    <div data-kudora-review>
-      <div class="autor">Sara L.</div>
+      <div class="autor">Sara Lunterberg</div>
       <div class="sterne" data-kudora-stars data-kudora-stars-value="5" aria-label="5 von 5 Sternen">★★★★★</div>
-      <div data-kudora-text>
-        Super zufrieden! Pünktlich, gründlich und absolut zuverlässig. Sehr gerne
-        wieder.
+      <div data-kudora-text>Ich bin super zufrieden mit Blue Clean! Absolut zuverlässig.</div>
+      <div class="inhaber-antwort"><strong>Antwort vom Inhaber</strong> vor 1 Monat<br />Vielen herzlichen Dank für Ihre wunderbare Rückmeldung!</div>
+      <div class="aktionen">
+        <button class="antworten-trigger">↩ Antworten</button>
+        <button>Gefällt mir</button>
       </div>
     </div>
 
-    <!-- Test-Weiche: statt echtem Backend eine feste Antwort liefern.
-         MUSS vor content.js gesetzt werden. -->
+    <!-- Karte 3: FREMDE Seite (kein "Antworten"-Knopf) -> Kudora skippt. -->
+    <div data-kudora-review>
+      <div class="autor">Maryam Mansouri</div>
+      <div class="sterne" data-kudora-stars data-kudora-stars-value="5" aria-label="5 von 5 Sternen">★★★★★</div>
+      <div data-kudora-text>Sehr zuverlässige und professionelle Reinigung.</div>
+      <div class="aktionen">
+        <button>Gefällt mir</button>
+        <button>Teilen</button>
+      </div>
+    </div>
+
     <script>
+      // Simuliert Googles Antwort-Fenster beim Klick auf "Antworten".
+      document.querySelectorAll(".antworten-trigger").forEach((t) => {
+        t.addEventListener("click", () => {
+          if (document.getElementById("modal")) return;
+          const karte = t.closest("[data-kudora-review]");
+          const rev = karte.querySelector("[data-kudora-text]").textContent.trim();
+          const m = document.createElement("div");
+          m.id = "modal";
+          m.setAttribute("role", "dialog");
+          m.innerHTML =
+            '<div class="titel">Auf Rezension antworten</div>' +
+            '<div class="rev">' + rev + '</div>' +
+            '<div>BlueClean Gebäudereinigung – Inhaber</div>' +
+            '<textarea aria-label="Öffentlich antworten"></textarea>' +
+            '<button class="submit">Antworten</button>';
+          document.body.appendChild(m);
+          m.querySelector(".submit").addEventListener("click", () => {
+            window.__GESENDET__ = (window.__GESENDET__ || 0) + 1;
+            m.remove();
+          });
+        });
+      });
+
+      // Test-Weiche: statt echtem Backend feste Antwort + Freigabe merken.
       window.__KUDORA_GENERATE__ = function (payload) {
-        const positiv = payload.sterne >= 4;
         return {
           ok: true,
-          entwurf: positiv
-            ? "Ganz herzlichen Dank für Ihre lieben Worte! Es freut uns riesig, dass Ihnen die Pasta und der Service gefallen haben. Wir freuen uns schon auf Ihren nächsten Besuch."
-            : "Es tut uns aufrichtig leid, dass die Wartezeit und die Sauberkeit nicht gepasst haben. Das entspricht nicht unserem Anspruch, und wir kümmern uns darum. Bitte geben Sie uns gern eine zweite Chance.",
-          freigabe_noetig: !positiv,
+          entwurf:
+            "Vielen Dank für Ihre tolle Bewertung! Es freut uns riesig, dass alles " +
+            "pünktlich, zuverlässig und gründlich war.",
+          freigabe_noetig: false,
           risikowoerter: [],
         };
       };
-      // Test-Weiche fürs Lernen: merkt sich die letzte Freigabe im Fenster.
       window.__KUDORA_FREIGABE__ = function (payload) {
         window.__LETZTE_FREIGABE__ = payload;
         return { ok: true, gespeichert: payload };

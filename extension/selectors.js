@@ -40,10 +40,12 @@ window.KUDORA_SELECTORS = {
   // direkt unter der Bewertung an.
   reply: [
     "[data-kudora-reply]",
+    'textarea[aria-label*="ffentlich"]',
     'textarea[aria-label*="Antwort"]',
     'textarea[aria-label*="antworten"]',
     'textarea[aria-label*="reply"]',
     'textarea[aria-label*="Reply"]',
+    '[role="dialog"] textarea',
   ],
   // Googles eigener "Senden/Posten"-Knopf der Antwort (nur im Inhaber-Profil da).
   // Bewusst innerhalb der Karte gesucht, damit kein fremder Knopf getroffen wird.
