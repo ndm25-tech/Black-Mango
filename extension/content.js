@@ -391,29 +391,40 @@
     return null;
   }
 
-  /* Das offene Antwort-Fenster ("Auf Rezension antworten") + sein Textfeld finden.
-   * Robust: echtes Textfeld ist mal <textarea>, mal ein bearbeitbares div; das
-   * Fenster hat nicht immer role="dialog". Erkennung daher textbasiert. */
+  // Ist das Element sichtbar und groß genug für ein Antwortfeld?
+  function sichtbaresFeld(el) {
+    if (!el || el.dataset.kudoraModal) return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 120 && r.height > 20 && el.offsetParent !== null;
+  }
+
+  /* Das offene Antwort-Fenster + sein Textfeld finden. SEHR robust: Kudora hängt
+   * sich an JEDES neu erscheinende Antwort-Feld — Textarea ODER bearbeitbares div
+   * (contenteditable / role=textbox). Kein bloßes <input> (das wäre die Suche). */
   function findeModal() {
-    // 1) Feld direkt über sein aria-label ("Öffentlich antworten").
+    // 1) Bevorzugt: Feld mit passendem aria-label ("Öffentlich antworten").
     let feld =
       document.querySelector('textarea[aria-label*="ffentlich" i]') ||
       document.querySelector('[contenteditable="true"][aria-label*="ffentlich" i]') ||
       document.querySelector('[role="textbox"][aria-label*="ffentlich" i]');
-    let modal = null;
-    // 2) Über die Überschrift "Auf Rezension antworten".
+    // 2) Sonst: irgendein sichtbares Antwort-Feld (Textarea/contenteditable/textbox).
     if (!feld) {
-      modal = findeContainerMitText("auf rezension antworten");
-      if (modal) feld = findeFeldIn(modal);
-    }
-    // 3) Irgendein Dialog mit bearbeitbarem Feld.
-    if (!feld) {
-      const dlg = document.querySelector('[role="dialog"]');
-      if (dlg) feld = findeFeldIn(dlg);
-      if (feld) modal = dlg;
+      const kandidaten = document.querySelectorAll(
+        'textarea, [contenteditable="true"], [role="textbox"]'
+      );
+      for (const el of kandidaten) {
+        if (sichtbaresFeld(el)) {
+          feld = el;
+          break;
+        }
+      }
     }
     if (!feld) return null;
-    if (!modal) modal = feld.closest('[role="dialog"]') || findeContainerMitText("auf rezension antworten") || feld.parentElement || document.body;
+    const modal =
+      feld.closest('[role="dialog"]') ||
+      findeContainerMitText("auf rezension antworten") ||
+      feld.parentElement ||
+      document.body;
     return { modal, feld };
   }
 
